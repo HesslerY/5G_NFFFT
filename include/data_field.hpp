@@ -1,20 +1,20 @@
 #ifndef _CIRCUIT_H_INCLUDED
 #define _CIRCUIT_H_INCLUDED
 
-#include "global.h"
+#include "global.hpp"
 #include <Eigen/Dense>
 #include <cmath>
 
 using namespace Eigen;
 
-namespace data_field{
+typedef Matrix<std::complex<double>,Dynamic,Dynamic> Mat_XC;
+typedef std::complex<double> Complexd;
 
+namespace data_field{
     class field{
     public:
         // Circuit() {};
-
         // virtual ~Circuit() { Clear(); };
-
         // void Clear() {
         // inputs.clear();
         // outputs.clear();
@@ -25,27 +25,16 @@ namespace data_field{
         // }
         // all_nodes.clear();
         // }
-
         // Circuit *GetDuplicate(std::string input_prefix, std::string output_prefix, std::string internal_prefix);
 
     public:
         double z;
         int n_sample;
+        double freq;
         Matrix<double,3,Dynamic> Rxyz;
-        Matrix<std::complex<double>,3,Dynamic> Exyz;
+        Matrix<Complexd,3,Dynamic> Exyz;
 
         int read_file(std::string);
-
-    private:
-        double t_l;
-
-        // // find a node by name, returns NULL if not found
-        // Node *GetNode(std::string name) {
-        // std::map<std::string, Node *>::iterator it = all_nodes_map.find(name);
-        // if (it != all_nodes_map.end())
-        //     return it->second;
-        // return NULL;
-        // }
     };
 }
 
@@ -58,19 +47,33 @@ namespace calcu_field{
         
     public:
         data_field::field neardata;
+        data_field::field fardata;
+        data_field::field far_ref;
 
     public:
         static constexpr double pai = 3.141592653589793;
-        static constexpr double myu = 1;
-        static constexpr double eps = 1;
+        static constexpr double myu = 1.25663706212e-10; //myu_0 [N A^(-2)]
+        static constexpr double eps = 8.8541878128e-12; // eps_0 [F m^(-1)]
+        static constexpr double freq = 28e9;// 28Ghz;
+        static constexpr double accur_SVD = 1e2;// singular value less than this is set to be 0 
 
+    private:
         int L = 3;
-        Matrix<std::complex<double>,Dynamic,Dynamic> A;// b = Ax
+        int P_theata;
+        int P_phai;
+        int P;
+        double k_0;
+        Mat_XC A;// b = Ax
+        Mat_XC ans;
+        Mat_XC U_mea; //prove voltage at neardata points
 
     public:
         int calcu_error(data_field::field field_calcu, data_field::field ref);
-        int set_matrix();
-        std::complex<double> calcu_T(Matrix<double,3,1> , Matrix<double,3,1> );
+        int set_matrix(); //set matrix A and other value (P,k_0 ...etc)
+        int calcu_ansbySVD();
+        int calcu_fardata();
+        int print_info();
+        Complexd calcu_T(Matrix<double,3,1> , Matrix<double,3,1>);
     };
 }
 
