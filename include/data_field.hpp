@@ -33,8 +33,12 @@ namespace data_field{
         double freq;
         Matrix<double,3,Dynamic> Rxyz;
         Matrix<Complexd,3,Dynamic> Exyz;
+        Matrix<double,3,Dynamic> Rpolar;
+        Matrix<Complexd,3,Dynamic> Epolar;
 
         int read_file(std::string);
+        int calcu_polar();
+        int copy_data(const field& in_field);
     };
 }
 
@@ -46,34 +50,46 @@ namespace calcu_field{
         }
         
     public:
-        data_field::field neardata;
-        data_field::field fardata;
-        data_field::field far_ref;
-
-    public:
         static constexpr double pai = 3.141592653589793;
-        static constexpr double myu = 1.25663706212e-10; //myu_0 [N A^(-2)]
+        static constexpr double myu = 1.25663706212e-6; //myu_0 [N A^(-2)]
         static constexpr double eps = 8.8541878128e-12; // eps_0 [F m^(-1)]
-        static constexpr double freq = 28e9;// 28Ghz;
-        static constexpr double accur_SVD = 1e2;// singular value less than this is set to be 0 
+        static constexpr double freq = 27e9;// 27Ghz;
+        static constexpr double accur_SVD = 1;// singular value less than this is set to be 0 
 
     private:
-        int L = 3;
+        int L;
         int P_theata;
         int P_phai;
         int P;
+        double w_theata;
+        double w_phai;
         double k_0;
+        Complexd coeff_A;
+
+        std::vector<Matrix<double,3,1>> vec_k;
+        std::vector<double> vec_sin; // vec of sin theata
+        std::vector<Matrix<double,2,1>> vec_k_angle; // vec[i][0] = theata_i , vec[i][1] = phai_i
         Mat_XC A;// b = Ax
         Mat_XC ans;
         Mat_XC U_mea; //prove voltage at neardata points
 
     public:
-        int calcu_error(data_field::field field_calcu, data_field::field ref);
+        data_field::field neardata;
+        data_field::field fardata;
+        data_field::field far_ref;
+
+        int start_calcu();
         int set_matrix(); //set matrix A and other value (P,k_0 ...etc)
         int calcu_ansbySVD();
-        int calcu_fardata();
+        int calcu_fardata(data_field::field& field_calcu,const data_field::field& ref);
+        int calcu_fardata2(data_field::field& field_calcu,const data_field::field& ref);
+        int calcu_error(const data_field::field& field_calcu,const  data_field::field& ref);
+        int calcu_ansbyEigen();
         int print_info();
+
+
         Complexd calcu_T(Matrix<double,3,1> , Matrix<double,3,1>);
+        Complexd calcu_provepattern(Matrix<double,3,1>);
     };
 }
 
