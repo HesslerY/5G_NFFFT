@@ -69,6 +69,8 @@ namespace calcu_field{
         std::vector<Matrix<double,3,1>> vec_k;
         std::vector<double> vec_sin; // vec of sin theata
         std::vector<Matrix<double,2,1>> vec_k_angle; // vec[i][0] = theata_i , vec[i][1] = phai_i
+    
+    public:
         Mat_XC A;// b = Ax
         Mat_XC ans;
         Mat_XC U_mea; //prove voltage at neardata points
@@ -79,10 +81,11 @@ namespace calcu_field{
         data_field::field far_ref;
 
         int start_calcu();
-        int set_matrix(); //set matrix A and other value (P,k_0 ...etc)
+        int set_matrix(Mat_XC& mat_cup,const Matrix<double,3,Dynamic>& Rxyz); //set matrix A and other value (P,k_0 ...etc)
         int calcu_ansbySVD();
         int calcu_fardata(data_field::field& field_calcu,const data_field::field& ref);
         int calcu_fardata2(data_field::field& field_calcu,const data_field::field& ref);
+        int calcu_fardata_U(data_field::field& field_calcu,const data_field::field& ref);
         int calcu_error(const data_field::field& field_calcu,const  data_field::field& ref);
         int calcu_ansbyEigen();
         int print_info();

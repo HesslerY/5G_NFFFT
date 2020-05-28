@@ -89,41 +89,44 @@ namespace calcu_field{
         // define constant value
         k_0 = 2*pai*freq*std::sqrt(myu*eps);
         int d_0 = 6;
-        double d = 1.5e-2;
+        double d = 1.2e-2;
         L = (int) k_0*d + 1.8*std::pow(d_0,(double)2/3)*std::pow(k_0*d,(double(1/3)));
+        L = 12;
         std::cout << "L = " << L << std::endl;
-        L = 15;
         P_theata = L;
-        P_phai = 2*L + 1;
+        // P_phai = 2*L + 1;
+        P_phai = 2*L;
         P = P_theata * P_phai;
-        w_theata = pai/(P_theata + 1);
-        w_phai = 2*pai/(P_phai + 1);
+        w_theata = pai/(P_theata);
+        w_phai = 2*pai/(P_phai);
 
         // set measured U vector ()
         U_mea = MatrixXd::Zero(neardata.n_sample,1);
         for(int i = 0 ; i < neardata.n_sample ; i++){
-            U_mea(i) = neardata.Exyz.col(i)(0);
-            // U_mea(i) = neardata.Exyz.col(i).sum();
+            // U_mea(i) = neardata.Exyz.col(i)(0);
+            U_mea(i) = neardata.Exyz.col(i).sum();
             // U_mea(i) = neardata.Exyz.col(i).norm();
 
-            // neardata.calcu_polar();
-            // U_mea(i) = neardata.Epolar(1,i) + neardata.Epolar(2,i);
+            neardata.calcu_polar();
+            U_mea(i) = neardata.Epolar(1,i) + neardata.Epolar(2,i);
         }
 
         // make wavenumber vec_k
-        double delta_theata = pai/(P_theata + 1);
-        double delta_phai = 2*pai/(P_phai + 1);
+        double delta_theata = pai/(P_theata);
+        double delta_phai = 2*pai/(P_phai);
         for(int n_theata = 1 ; n_theata <= P_theata ; n_theata++){
             for(int n_phai = 1 ; n_phai <= P_phai ; n_phai++){
                 Matrix<double,3,1> k;
                 Matrix<double,2,1> angle;
-                double x = std::sin(delta_theata*n_theata) * std::cos(delta_phai * n_phai);
-                double y = std::sin(delta_theata*n_theata) * std::sin(delta_phai * n_phai);
-                double z = std::cos(delta_theata*n_theata);
+                double theata = delta_theata*n_theata - delta_theata / 2;
+                double phai = delta_phai * n_phai - delta_phai / 2;
+                double x = std::sin(theata) * std::cos(phai);
+                double y = std::sin(theata) * std::sin(phai);
+                double z = std::cos(theata);
                 k << x,y,z;
-                angle << delta_theata*n_theata, delta_phai * n_phai;
+                angle << theata, phai;
                 vec_k.push_back(k);
-                vec_sin.push_back(std::sin(delta_theata*n_theata));
+                vec_sin.push_back(std::sin(theata));
                 vec_k_angle.push_back(angle);
             }
         }
@@ -131,29 +134,31 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::set_matrix(){
-        std::cout << "#set matrix A" << std::endl; 
-        A.resize(neardata.n_sample , 2*P);
+// set coupling matrix mat_cup
+    int calcu::set_matrix(Mat_XC& mat_cup,const Matrix<double,3,Dynamic>& Rxyz){
+        std::cout << "#set matrix A" << std::endl;
+        int n_sample = Rxyz.cols();
+        mat_cup.resize(n_sample , 2*P);
         // A.resize(neardata.n_sample , P);
         // std::cout << "A size = " << A.rows() << " * " << A.cols() << std::endl;
-        for(int j = 0 ; j < A.cols() ; j++){
+        for(int j = 0 ; j < mat_cup.cols() ; j++){
             if(j < P){//about theata
-                for(int i = 0 ; i < A.rows() ; i++){
-                    std::complex<double> temp_T = calcu_T(vec_k[j],neardata.Rxyz.col(i));
+                for(int i = 0 ; i < mat_cup.rows() ; i++){
+                    std::complex<double> temp_T = calcu_T(vec_k[j],Rxyz.col(i));
                     std::complex<double> temp_W = calcu_provepattern(vec_k[j]);
-                    A(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
+                    mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
                 }
             }else if( j >= P){//about phai
-                for(int i = 0 ; i < A.rows() ; i++){
-                    std::complex<double> temp_T = calcu_T(vec_k[j-P],neardata.Rxyz.col(i));
+                for(int i = 0 ; i < mat_cup.rows() ; i++){
+                    std::complex<double> temp_T = calcu_T(vec_k[j-P],Rxyz.col(i));
                     std::complex<double> temp_W = calcu_provepattern(vec_k[j-P]);
-                    A(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
+                    mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
                 }
             }
         }
         coeff_A = Complexd(0,-1) * freq * myu / (double)2;
         // A = A * coeff_A;
-        std::cout << "A = " << A << std::endl;
+        // std::cout << "A = " << A << std::endl;
         return 0;
     }
 
@@ -175,7 +180,7 @@ namespace calcu_field{
             // std::cout << "hankel_2 = " << sph_hankel_2(i,k_0*r_R.norm()) <<std::endl;
             result += std::pow(Complexd(0,-1),i) * (double)(2*i+1) * std::legendre(i,k.normalized().dot(r_R.normalized())) * sph_hankel_2(i,k_0*r_R.norm());
         }
-        result = result * coeff_T;
+        // result = result * coeff_T;
         // std::cout << "result = " << result <<std::endl;
 
         return result;
@@ -236,7 +241,6 @@ namespace calcu_field{
 
     int calcu::calcu_ansbyEigen(){
         Mat_XC x;
-    
     // ans by LU
         // FullPivLU<Mat_XC> lu(A);
         // x = lu.solve(U_mea);
@@ -244,8 +248,6 @@ namespace calcu_field{
     // ans by SVD of Eigen
         JacobiSVD<Mat_XC> SVD(A,ComputeThinU | ComputeThinV);
         x = SVD.solve(U_mea);
-        // std::cout << "x.size() = " << x.size() <<std::endl;
-        // std::cout << "x = "<< x.transpose() << std::endl;
         ans = x;
 
     // ans by QR decomposition
@@ -258,8 +260,6 @@ namespace calcu_field{
 
         return 0;
     }
-
-
 
 // calculation of prove pattern weight
 // ideal prove always 1 (for all direction)
@@ -295,7 +295,7 @@ namespace calcu_field{
         }
         // field_calcu.Exyz = field_calcu.Exyz * coeff_A;
         std::cout << "finish calculating fardata" <<std::endl;
-        std::cout << field_calcu.Exyz <<std::endl;
+        // std::cout << field_calcu.Exyz <<std::endl;
         return 0;
     }
 
@@ -315,7 +315,7 @@ namespace calcu_field{
                     field_calcu.Exyz(1,i) += E_theata*std::cos(vec_k_angle[j](0))*std::sin(vec_k_angle[j](1)) ;
                     field_calcu.Exyz(2,i) += -E_theata*std::sin(vec_k_angle[j](0));
                 }else if(j >= P){
-                    E_phai += w_theata*w_phai*calcu_T(vec_k[j-P],field_calcu.Rxyz.col(i))*vec_sin[j-P]*ans(j);
+                    E_phai = w_theata*w_phai*calcu_T(vec_k[j-P],field_calcu.Rxyz.col(i))*vec_sin[j-P]*ans(j);
                     field_calcu.Exyz(0,i) +=  - E_phai*std::sin(vec_k_angle[j-P](1));
                     field_calcu.Exyz(1,i) +=  E_phai*std::cos(vec_k_angle[j-P](1));
                     field_calcu.Exyz(2,i) += 0;
@@ -323,6 +323,18 @@ namespace calcu_field{
             }
         }
         // field_calcu.Exyz = field_calcu.Exyz * coeff_A;
+        return 0;
+    }
+
+    int calcu::calcu_fardata_U(data_field::field& field_calcu,const data_field::field& ref){
+        Mat_XC A_far;
+        field_calcu.copy_data(ref);
+        set_matrix(A_far , field_calcu.Rxyz);
+        Mat_XC result = MatrixXd::Zero(ref.n_sample,1);
+        result = A_far * ans;
+        std::cout << "fardata_U.cols() = " << result.cols() << std::endl;
+        std::cout << "fardata_U.rows() = " << result.rows() << std::endl;
+        std::cout << "fardata_U = \n" << result.transpose() << std::endl;
         return 0;
     }
 
@@ -365,8 +377,8 @@ namespace calcu_field{
         std::cout << "P_theata = " << P_theata << std::endl;
         std::cout << "P_phai = " << P_phai << std::endl;
         
-        std::cout << "A.row = " << A.rows() << std::endl;
-        std::cout << "A.col = " << A.cols() << std::endl;
+        // std::cout << "A.row = " << A.rows() << std::endl;
+        // std::cout << "A.col = " << A.cols() << std::endl;
         // std::cout << "A.col(0) = " << A.col(0).transpose() <<std::endl;
         // std::cout << "A.col(465) = " << A.col(465).transpose() <<std::endl;
         // std::cout << "A = " << A << std::endl;
@@ -390,7 +402,6 @@ namespace calcu_field{
         std::cout << "neardata_Rpolar = \n" << neardata.Rpolar << std::endl;
         std::cout << "neardata_Epolar = \n" << neardata.Epolar << std::endl;
         std::cout << "========= end info debug =========" << std::endl;
-
         return 0;
 
     }
