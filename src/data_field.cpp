@@ -55,6 +55,7 @@ namespace data_field{
             column++;
         }
         std::cout << "#finish read file = " << filename <<std::endl;
+
         return 1;
     }
 
@@ -64,7 +65,12 @@ namespace data_field{
         for(int i = 0 ; i < n_sample ; i++){
             double r_r = Rxyz.col(i).norm();
             double r_theata = std::acos( Rxyz(2,i)/Rxyz.col(i).norm() );
-            double r_phai = std::atan( Rxyz(1,i)/Rxyz(0,i) ); 
+            double r_phai;
+            if(Rxyz(1,i) == 0 && Rxyz(0,i) == 0){
+                r_phai = 0;
+            }else{
+                r_phai = std::atan2(Rxyz(1,i) , Rxyz(0,i));
+            }
             Rpolar(0,i) = r_r;
             Rpolar(1,i) = r_theata;
             Rpolar(2,i) = r_phai;
@@ -72,6 +78,10 @@ namespace data_field{
             Epolar(1,i) = Exyz(0,i)*std::cos(r_theata)*std::cos(r_phai) + Exyz(1,i)*std::cos(r_theata)*std::sin(r_phai) - Exyz(2,i)*std::sin(r_theata);
             Epolar(2,i) = -Exyz(0,i)*std::sin(r_phai) + Exyz(1,i)*std::cos(r_phai);
         }
+        return 0;
+    }
+
+    int field::calcu_cart(){
         return 0;
     }
 
@@ -91,7 +101,7 @@ namespace calcu_field{
         int d_0 = 6;
         double d = 1.2e-2;
         L = (int) k_0*d + 1.8*std::pow(d_0,(double)2/3)*std::pow(k_0*d,(double(1/3)));
-        L = 12;
+        L = 20;
         std::cout << "L = " << L << std::endl;
         P_theata = L;
         // P_phai = 2*L + 1;
@@ -101,14 +111,21 @@ namespace calcu_field{
         w_phai = 2*pai/(P_phai);
 
         // set measured U vector ()
-        U_mea = MatrixXd::Zero(neardata.n_sample,1);
-        for(int i = 0 ; i < neardata.n_sample ; i++){
-            // U_mea(i) = neardata.Exyz.col(i)(0);
-            U_mea(i) = neardata.Exyz.col(i).sum();
-            // U_mea(i) = neardata.Exyz.col(i).norm();
-
-            neardata.calcu_polar();
-            U_mea(i) = neardata.Epolar(1,i) + neardata.Epolar(2,i);
+        near_ref.calcu_polar();
+        // U_mea = MatrixXd::Zero(near_ref.n_sample,1);
+        // for(int i = 0 ; i < near_ref.n_sample ; i++){
+        //     // U_mea(i) = near_ref.Exyz.col(i)(0);
+        //     // U_mea(i) = near_ref.Exyz.col(i).sum();
+        //     // U_mea(i) = near_ref.Exyz.col(i).norm();
+        //     U_mea(i) = near_ref.Epolar(1,i) + near_ref.Epolar(2,i);
+        // }
+        U_mea = MatrixXd::Zero(near_ref.n_sample * 2 ,1);
+        for(int i = 0 ; i < near_ref.n_sample * 2 ; i++){
+            if(i < near_ref.n_sample){
+                U_mea(i) = near_ref.Epolar(1,i);
+            }else{
+                U_mea(i) = near_ref.Epolar(2,i-near_ref.n_sample);
+            }
         }
 
         // make wavenumber vec_k
@@ -136,24 +153,45 @@ namespace calcu_field{
 
 // set coupling matrix mat_cup
     int calcu::set_matrix(Mat_XC& mat_cup,const Matrix<double,3,Dynamic>& Rxyz){
-        std::cout << "#set matrix A" << std::endl;
+        std::cout << "#set matrix mat_cup" << std::endl;
         int n_sample = Rxyz.cols();
-        mat_cup.resize(n_sample , 2*P);
-        // A.resize(neardata.n_sample , P);
+        mat_cup.resize(n_sample*2 , 2*P);
+        // A.resize(near_ref.n_sample , P);
         // std::cout << "A size = " << A.rows() << " * " << A.cols() << std::endl;
         for(int j = 0 ; j < mat_cup.cols() ; j++){
             if(j < P){//about theata
                 for(int i = 0 ; i < mat_cup.rows() ; i++){
-                    std::complex<double> temp_T = calcu_T(vec_k[j],Rxyz.col(i));
-                    std::complex<double> temp_W = calcu_provepattern(vec_k[j]);
-                    mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
+                    // first polarization (theta) 
+                    if(i < n_sample){
+                        std::complex<double> temp_T = calcu_T(vec_k[j],Rxyz.col(i));
+                        std::complex<double> temp_W = provepattern_theata(vec_k[j],i);
+                        mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
+                    }else if(n_sample <= i && i < 2*n_sample){
+                    // second polarization (phi)
+                        std::complex<double> temp_T = calcu_T(vec_k[j],Rxyz.col(i - n_sample));
+                        std::complex<double> temp_W = provepattern_theata(vec_k[j],i - n_sample);
+                        // mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
+                        mat_cup(i,j) = 0;
+                    }else{
+                        std::cout << "error index of mat_cup is wrong" << std::endl;
+                    }
                 }
+
             }else if( j >= P){//about phai
                 for(int i = 0 ; i < mat_cup.rows() ; i++){
-                    std::complex<double> temp_T = calcu_T(vec_k[j-P],Rxyz.col(i));
-                    std::complex<double> temp_W = calcu_provepattern(vec_k[j-P]);
-                    mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
-                }
+                    if(i < n_sample){
+                        std::complex<double> temp_T = calcu_T(vec_k[j-P],Rxyz.col(i));
+                        std::complex<double> temp_W = provepattern_phai(vec_k[j-P],i);
+                        // mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
+                        mat_cup(i,j) = 0;
+                    }else if(n_sample <= i && i < 2*n_sample){
+                        std::complex<double> temp_T = calcu_T(vec_k[j-P],Rxyz.col(i - n_sample));
+                        std::complex<double> temp_W = provepattern_phai(vec_k[j-P],i - n_sample);
+                        mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
+                    }else{
+                        std::cout << "error index of mat_cup is wrong" << std::endl;
+                    }
+               }
             }
         }
         coeff_A = Complexd(0,-1) * freq * myu / (double)2;
@@ -246,7 +284,7 @@ namespace calcu_field{
         // x = lu.solve(U_mea);
 
     // ans by SVD of Eigen
-        JacobiSVD<Mat_XC> SVD(A,ComputeThinU | ComputeThinV);
+        BDCSVD<Mat_XC> SVD(A,ComputeThinU | ComputeThinV);
         x = SVD.solve(U_mea);
         ans = x;
 
@@ -263,7 +301,10 @@ namespace calcu_field{
 
 // calculation of prove pattern weight
 // ideal prove always 1 (for all direction)
-    Complexd calcu::calcu_provepattern(Matrix<double,3,1> k){
+    Complexd calcu::provepattern_theata(Matrix<double,3,1> k , int index_row){
+        return 1;
+    }
+    Complexd calcu::provepattern_phai(Matrix<double,3,1> k , int index_row){
         return 1;
     }
 
@@ -285,7 +326,13 @@ namespace calcu_field{
             }
             // cos(theata) = z/r : tan(phai) = y/x
             double r_theata = std::acos( field_calcu.Rxyz(2,i)/field_calcu.Rxyz.col(i).norm() );
-            double r_phai = std::atan( field_calcu.Rxyz(1,i)/field_calcu.Rxyz(0,i) ); 
+            double r_phai;
+            if(field_calcu.Rxyz(1,i) == 0 && field_calcu.Rxyz(0,i) == 0){
+                r_phai = 0;
+            }else{
+                r_phai = std::atan2(field_calcu.Rxyz(1,i) , field_calcu.Rxyz(0,i));
+            }
+
             field_calcu.Exyz(0,i) = E_theata*std::cos(r_theata)*std::cos(r_phai) - E_phai*std::sin(r_phai);
             field_calcu.Exyz(1,i) = E_theata*std::cos(r_theata)*std::sin(r_phai) + E_phai*std::cos(r_phai);
             field_calcu.Exyz(2,i) = -E_theata*std::sin(r_theata);
@@ -362,6 +409,13 @@ namespace calcu_field{
             std::cout << "sum_error = " << sum_error << std::endl;
             std::cout << "sum_ref = " << sum_ref << std::endl;
             std::cout << "error (%) = " << sum_error / sum_ref * 100 << std::endl;
+
+            Matrix<double,2,Dynamic> mat_power = Matrix<double,2,Dynamic>::Zero(2,ref.n_sample);
+            for(int i = 0 ; i < ref.n_sample ; i++){
+                mat_power(0,i) = ref.Exyz.col(i).norm();
+                mat_power(1,i) = field_calcu.Exyz.col(i).norm();
+            }
+            std::cout << "ref and calcu power = \n" << mat_power.transpose() <<std::endl;
             std::cout << "======= calcu error between two field  end ========" << std::endl;
         }
         return 0;
@@ -370,7 +424,7 @@ namespace calcu_field{
 // print info 
     int calcu::print_info(){
         std::cout << "========= info calcu=========" << std::endl;
-        std::cout << "sampling points = " << neardata.n_sample << std::endl;
+        std::cout << "sampling points = " << near_ref.n_sample << std::endl;
         std::cout << "freq = " << freq << std::endl;
         std::cout << "k_0 = " << k_0 << std::endl;
         std::cout << "L = " << L << std::endl;
@@ -396,13 +450,23 @@ namespace calcu_field{
 
         std::cout << "========= info debug =========" << std::endl;
         far_ref.calcu_polar();
+        // std::cout << "far_Rxyz = \n" << far_ref.Rxyz.col(527) << std::endl;
+        // std::cout << "far_Exyz = \n" << far_ref.Exyz.col(527) << std::endl;
+        // std::cout << "far_Rpolar = \n" << far_ref.Rpolar.col(527) << std::endl;
+        // std::cout << "far_Epolar = \n" << far_ref.Epolar.col(527) << std::endl;
         std::cout << "far_Rpolar = \n" << far_ref.Rpolar << std::endl;
         std::cout << "far_Epolar = \n" << far_ref.Epolar << std::endl;
-        neardata.calcu_polar();
-        std::cout << "neardata_Rpolar = \n" << neardata.Rpolar << std::endl;
-        std::cout << "neardata_Epolar = \n" << neardata.Epolar << std::endl;
+        near_ref.calcu_polar();
+        std::cout << "near_ref_Rpolar = \n" << near_ref.Rpolar << std::endl;
+        std::cout << "near_ref_Epolar = \n" << near_ref.Epolar << std::endl;
+        fardata.calcu_polar();
+        std::cout << "fardata_Rpolar = \n" << fardata.Rpolar << std::endl;
+        std::cout << "fardata_Epolar = \n" << fardata.Epolar << std::endl;
         std::cout << "========= end info debug =========" << std::endl;
         return 0;
+    }
 
+    int calcu::plot_field(){
+        return 0;
     }
 }

@@ -13,23 +13,26 @@
 
 int main(int argc, char** argv){
 
-    // std::cout << "argc=" << argc << std::endl;
-    // if(argc < 2){
-    //     std::cout << "error (./field_trans nearfield.txt farfield.txt)" <<std::endl;
-    // }
+    std::cout << "argc=" << argc << std::endl;
+    if(argc != 3){
+        std::cout << "error (./field_trans nearfield.txt farfield.txt)" <<std::endl;
+    }
 
-    std::string file_near = "../data/near_15_32_short.txt";
-    std::string file_far_ref = "../data/far_50_32_short.txt";
+    std::string file_near;
+    std::string file_far_ref;
+
+    file_near = argv[1];
+    file_far_ref = argv[2];
+
     calcu_field::calcu calcu1;
-
-    calcu1.neardata.read_file(file_near);
+    calcu1.near_ref.read_file(file_near);
     calcu1.far_ref.read_file(file_far_ref);
     calcu1.start_calcu();
-    calcu1.set_matrix(calcu1.A,calcu1.neardata.Rxyz);
+    calcu1.set_matrix(calcu1.A,calcu1.near_ref.Rxyz);
     // calcu1.calcu_ansbySVD();
     calcu1.calcu_ansbyEigen();
-    calcu1.calcu_fardata(calcu1.fardata,calcu1.far_ref);
-    // calcu1.calcu_fardata2(calcu1.fardata,calcu1.far_ref);
+    // calcu1.calcu_fardata(calcu1.fardata,calcu1.far_ref);
+    calcu1.calcu_fardata2(calcu1.fardata,calcu1.far_ref);
     // calcu1.calcu_fardata_U(calcu1.fardata,calcu1.far_ref);
 
     calcu1.print_info();

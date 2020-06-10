@@ -38,6 +38,7 @@ namespace data_field{
 
         int read_file(std::string);
         int calcu_polar();
+        int calcu_cart();
         int copy_data(const field& in_field);
     };
 }
@@ -76,7 +77,7 @@ namespace calcu_field{
         Mat_XC U_mea; //prove voltage at neardata points
 
     public:
-        data_field::field neardata;
+        data_field::field near_ref;
         data_field::field fardata;
         data_field::field far_ref;
 
@@ -89,10 +90,12 @@ namespace calcu_field{
         int calcu_error(const data_field::field& field_calcu,const  data_field::field& ref);
         int calcu_ansbyEigen();
         int print_info();
+        int plot_field();//plot E field by gnuplot
 
 
         Complexd calcu_T(Matrix<double,3,1> , Matrix<double,3,1>);
-        Complexd calcu_provepattern(Matrix<double,3,1>);
+        Complexd provepattern_theata(Matrix<double,3,1> , int);
+        Complexd provepattern_phai(Matrix<double,3,1> , int);
     };
 }
 
