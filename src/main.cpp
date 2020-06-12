@@ -8,6 +8,7 @@
 
 // #include <Eigen/Dense>
 #include "data_field.hpp"
+#include "calcu_field.hpp"
 #include "global.hpp"
 #include <cmath>
 
@@ -38,7 +39,10 @@ int main(int argc, char** argv){
     calcu1.print_info();
     calcu1.calcu_error(calcu1.fardata,calcu1.far_ref);
 
+    // calcu1.plot_field();
+
     std::cout << "finish all calculation" << std::endl;
+
 
     // ルジャンドル*ハンケル
     // double krm = 0.5;
