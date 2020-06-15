@@ -193,11 +193,18 @@ namespace calcu_field{
     // ans by LU
         // FullPivLU<Mat_XC> lu(A);
         // x = lu.solve(U_mea);
+        // ans = x;
 
     // ans by SVD of Eigen
         BDCSVD<Mat_XC> SVD(A,ComputeThinU | ComputeThinV);
+        // JacobiSVD<Mat_XC> SVD(A,ComputeThinU | ComputeThinV);
         x = SVD.solve(U_mea);
         ans = x;
+
+    // // ans by GMRES of Eigen
+        // GMRES<Mat_XC> solver(A);
+        // x = solver.solve(U_mea);
+        // ans = x;
 
     // ans by QR decomposition
         // Mat_XC y;
@@ -385,12 +392,14 @@ namespace calcu_field{
         // std::cout << plot_field.row(0).maxCoeff() << std::endl;
 
         std::vector<std::vector<double>> vec_y;
-        int size_col = std::min((int)plot_field.cols(), 200);
+        // int size_col = std::min((int)plot_field.cols(), 200);
+        int size_col = (int)plot_field.cols();
         std::cout << "size = " << size_col << std::endl;
         std::vector<double> x(size_col);
+        double val_max = plot_field.row(0).maxCoeff();
 
         for(int i = 0 ; i < plot_field.rows() ; i++){
-            double val_max = plot_field.row(i).maxCoeff();
+            // double val_max = plot_field.row(i).maxCoeff();
             std::cout << "val_max = " << val_max << std::endl;
             std::vector<double> y(size_col);
             for(int j = 0 ; j < size_col ; j++){
@@ -398,18 +407,19 @@ namespace calcu_field{
             }
             vec_y.push_back(y);
             for(auto index : y){
-                std::cout << index << " " <<std::endl;
+                std::cout << index << " " ;
             }
+            std::cout << std::endl;
         }
         for(int i = 0 ; i < x.size() ; i++){
             x[i] = i;
         }
         plt::xlabel("ith sampling points");
         plt::ylabel("Gain [dB]");
-        plt::ylim(-30,0);
+        // plt::ylim(-30,0);
         plt::grid(true);
         plt::named_plot("ref",x,vec_y[0],"-.r");
-        plt::named_plot("calcu",x,vec_y[1],"-b");
+        plt::plot(x,vec_y[1],"-b");
         plt::show();
         return 0;
     }
