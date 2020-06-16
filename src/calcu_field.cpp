@@ -1,9 +1,6 @@
 #include "data_field.hpp"
 #include "calcu_field.hpp"
 #include "global.hpp"
-#include "matplotlibcpp.hpp"
-
-namespace plt = matplotlibcpp;
 
 namespace calcu_field{
     int calcu::start_calcu(){
@@ -385,9 +382,6 @@ namespace calcu_field{
     }
 
     int calcu::plot_field(const MatrixXd& plot_field){
-        // plt::plot({1,3,2,4});
-        // plt::show();
-
         std::cout << plot_field.transpose() << std::endl;
         // std::cout << plot_field.row(0).maxCoeff() << std::endl;
 
@@ -414,13 +408,6 @@ namespace calcu_field{
         for(int i = 0 ; i < x.size() ; i++){
             x[i] = i;
         }
-        plt::xlabel("ith sampling points");
-        plt::ylabel("Gain [dB]");
-        // plt::ylim(-30,0);
-        plt::grid(true);
-        plt::named_plot("ref",x,vec_y[0],"-.r");
-        plt::plot(x,vec_y[1],"-b");
-        plt::show();
         return 0;
     }
 }
