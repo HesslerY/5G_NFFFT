@@ -44,6 +44,7 @@ namespace calcu_field{
         int calcu_ansbySVD();
         int calcu_fardata(data_field::field& field_calcu,const data_field::field& ref);
         int calcu_fardata2(data_field::field& field_calcu,const data_field::field& ref);
+        int clacu_fardata3(data_field::field& field_calcu,const data_field::field& ref);
         int calcu_fardata_U(data_field::field& field_calcu,const data_field::field& ref);
         int calcu_error(const data_field::field& field_calcu,const  data_field::field& ref);
         int calcu_ansbyEigen();

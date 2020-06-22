@@ -19,27 +19,26 @@ int main(int argc, char** argv){
         std::cout << "error (./field_trans nearfield.txt farfield.txt)" <<std::endl;
     }
 
-    std::string file_near;
+    std::string file_near_ref;
     std::string file_far_ref;
 
-    file_near = argv[1];
+    file_near_ref = argv[1];
     file_far_ref = argv[2];
 
     calcu_field::calcu calcu1;
-    calcu1.near_ref.read_file(file_near);
+    calcu1.near_ref.read_file(file_near_ref);
     calcu1.far_ref.read_file(file_far_ref);
     calcu1.start_calcu();
     calcu1.set_matrix(calcu1.A,calcu1.near_ref.Rxyz);
     // calcu1.calcu_ansbySVD();
     calcu1.calcu_ansbyEigen();
-    // calcu1.calcu_fardata(calcu1.fardata,calcu1.far_ref);
-    calcu1.calcu_fardata2(calcu1.fardata,calcu1.far_ref);
+    calcu1.calcu_fardata(calcu1.fardata,calcu1.far_ref);
+    // calcu1.calcu_fardata2(calcu1.fardata,calcu1.far_ref);
+    // calcu1.clacu_fardata3(calcu1.fardata,calcu1.far_ref);
     // calcu1.calcu_fardata_U(calcu1.fardata,calcu1.far_ref);
 
     calcu1.print_info();
     calcu1.calcu_error(calcu1.fardata,calcu1.far_ref);
-
-    // calcu1.plot_field();
 
     std::cout << "finish all calculation" << std::endl;
 
@@ -76,12 +75,6 @@ int main(int argc, char** argv){
     //         std::cout << std::sin(delta_theata * i - delta_theata/2) <<std::endl;
     //     }
     // }
-    // std::cout << result << std::endl;
-
-    //  check T_L
-    // Complexd result = 0;
-    // int i = 10;
-    // result = std::pow(Complexd(0,-1),i) * (double)(2*i+1) * std::legendre(i,0.5) * sph_hankel_2(i,2.2);
     // std::cout << result << std::endl;
     return 0;
 }

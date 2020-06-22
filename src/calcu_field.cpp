@@ -27,6 +27,7 @@ namespace calcu_field{
         //     // U_mea(i) = near_ref.Exyz.col(i).norm();
         //     U_mea(i) = near_ref.Epolar(1,i) + near_ref.Epolar(2,i);
         // }
+
         U_mea = MatrixXd::Zero(near_ref.n_sample * 2 ,1);
         for(int i = 0 ; i < near_ref.n_sample * 2 ; i++){
             if(i < near_ref.n_sample){
@@ -55,7 +56,6 @@ namespace calcu_field{
                 vec_k_angle.push_back(angle);
             }
         }
-
         return 0;
     }
 
@@ -126,7 +126,7 @@ namespace calcu_field{
             // std::cout << "hankel_2 = " << sph_hankel_2(i,k_0*r_R.norm()) <<std::endl;
             result += std::pow(Complexd(0,-1),i) * (double)(2*i+1) * std::legendre(i,k.normalized().dot(r_R.normalized())) * sph_hankel_2(i,k_0*r_R.norm());
         }
-        // result = result * coeff_T;
+        result = result * coeff_T;
         // std::cout << "result = " << result <<std::endl;
 
         return result;
@@ -225,36 +225,50 @@ namespace calcu_field{
 
 // calcu fardata from ans (U_mea = A*ans) angle by r_m
     int calcu::calcu_fardata(data_field::field& field_calcu,const data_field::field& ref){
-        Mat_XC Epolar(3,ref.n_sample);//E_r , E_theata , E_phai @field_calcu
         field_calcu.copy_data(ref);
+        field_calcu.calcu_polar();//ここは修正　Epolarを計算する必要なし
 
-        // 各r_iに対して計算 T*Dj
-        for(int i = 0 ; i < field_calcu.Rxyz.cols() ; i++){
-            Complexd E_theata = 0;
-            Complexd E_phai = 0;
-            for(int j = 0 ; j < A.cols() ; j++){
-                if (j < P){
-                    E_theata += w_theata*w_phai*calcu_T(vec_k[j],field_calcu.Rxyz.col(i))*vec_sin[j]*ans(j);
-                }else if(j >= P){
-                    E_phai += w_theata*w_phai*calcu_T(vec_k[j-P],field_calcu.Rxyz.col(i))*vec_sin[j-P]*ans(j);
-                }
-            }
-            // cos(theata) = z/r : tan(phai) = y/x
-            double r_theata = std::acos( field_calcu.Rxyz(2,i)/field_calcu.Rxyz.col(i).norm() );
-            double r_phai;
-            if(field_calcu.Rxyz(1,i) == 0 && field_calcu.Rxyz(0,i) == 0){
-                r_phai = 0;
-            }else{
-                r_phai = std::atan2(field_calcu.Rxyz(1,i) , field_calcu.Rxyz(0,i));
-            }
+        Mat_XC A_far;
+        set_matrix(A_far,field_calcu.Rxyz);
+        Mat_XC U_far = A_far * ans;
 
-            field_calcu.Exyz(0,i) = E_theata*std::cos(r_theata)*std::cos(r_phai) - E_phai*std::sin(r_phai);
-            field_calcu.Exyz(1,i) = E_theata*std::cos(r_theata)*std::sin(r_phai) + E_phai*std::cos(r_phai);
-            field_calcu.Exyz(2,i) = -E_theata*std::sin(r_theata);
-            // std::cout << "theata,phai = " << r_theata << " " << r_phai << std::endl;
-            // std::cout << "E_theata,E_phai = " << E_theata << " " << E_phai << std::endl;
+        // // 各r_iに対して計算 T*Dj
+        // for(int i = 0 ; i < field_calcu.Rxyz.cols() ; i++){
+        //     Complexd E_theata = 0;
+        //     Complexd E_phai = 0;
+        //     for(int j = 0 ; j < A.cols() ; j++){
+        //         if (j < P){
+        //             E_theata += w_theata*w_phai*calcu_T(vec_k[j],field_calcu.Rxyz.col(i))*vec_sin[j]*ans(j);
+        //         }else if(j >= P){
+        //             E_phai += w_theata*w_phai*calcu_T(vec_k[j-P],field_calcu.Rxyz.col(i))*vec_sin[j-P]*ans(j);
+        //         }
+        //     }
+        //     // cos(theata) = z/r : tan(phai) = y/x
+        //     double r_theata = std::acos( field_calcu.Rxyz(2,i)/field_calcu.Rxyz.col(i).norm() );
+        //     double r_phai;
+        //     if(field_calcu.Rxyz(1,i) == 0 && field_calcu.Rxyz(0,i) == 0){
+        //         r_phai = 0;
+        //     }else{
+        //         r_phai = std::atan2(field_calcu.Rxyz(1,i) , field_calcu.Rxyz(0,i));
+        //     }
 
+        //     field_calcu.Exyz(0,i) = E_theata*std::cos(r_theata)*std::cos(r_phai) - E_phai*std::sin(r_phai);
+        //     field_calcu.Exyz(1,i) = E_theata*std::cos(r_theata)*std::sin(r_phai) + E_phai*std::cos(r_phai);
+        //     field_calcu.Exyz(2,i) = -E_theata*std::sin(r_theata);
+        //     // std::cout << "theata,phai = " << r_theata << " " << r_phai << std::endl;
+        //     std::cout << "E_theata,E_phai = " << E_theata << " " << E(i) << "," << E_phai << " " << E(i+field_calcu.n_sample) << std::endl;
+
+        // }
+
+        for(int i= 0 ; i < field_calcu.Rxyz.cols() ; i++){
+            field_calcu.Epolar(0,i) = 0;
+            field_calcu.Epolar(1,i) = U_far(i);
+            field_calcu.Epolar(2,i) = U_far(i + field_calcu.n_sample);
         }
+
+        field_calcu.calcu_cart();
+        // std::cout << field_calcu.Epolar << std::endl;
+
         // field_calcu.Exyz = field_calcu.Exyz * coeff_A;
         std::cout << "finish calculating fardata" <<std::endl;
         // std::cout << field_calcu.Exyz <<std::endl;
@@ -285,6 +299,33 @@ namespace calcu_field{
             }
         }
         // field_calcu.Exyz = field_calcu.Exyz * coeff_A;
+        return 0;
+    }
+
+    int calcu::clacu_fardata3(data_field::field& field_calcu,const data_field::field& ref){
+        field_calcu.copy_data(ref);
+
+        // Mat_XC temp = A * ans;
+        Mat_XC temp = U_mea;
+        for(int i = 0 ; i < field_calcu.Rxyz.cols() ; i++){
+            Complexd E_theata = temp(i);
+            Complexd E_phai = temp(i + ref.Rxyz.cols());
+
+            double r_theata = std::acos( field_calcu.Rxyz(2,i)/field_calcu.Rxyz.col(i).norm() );
+            double r_phai;
+            if(field_calcu.Rxyz(1,i) == 0 && field_calcu.Rxyz(0,i) == 0){
+                r_phai = 0;
+            }else{
+                r_phai = std::atan2(field_calcu.Rxyz(1,i) , field_calcu.Rxyz(0,i));
+            }
+
+            field_calcu.Exyz(0,i) = E_theata*std::cos(r_theata)*std::cos(r_phai) - E_phai*std::sin(r_phai);
+            field_calcu.Exyz(1,i) = E_theata*std::cos(r_theata)*std::sin(r_phai) + E_phai*std::cos(r_phai);
+            field_calcu.Exyz(2,i) = -E_theata*std::sin(r_theata);
+        }
+        // field_calcu.Exyz = field_calcu.Exyz * coeff_A;
+        std::cout << "finish calculating fardata" <<std::endl;
+        // std::cout << field_calcu.Exyz <<std::endl;
         return 0;
     }
 
@@ -365,10 +406,6 @@ namespace calcu_field{
 
         std::cout << "========= info debug =========" << std::endl;
         far_ref.calcu_polar();
-        // std::cout << "far_Rxyz = \n" << far_ref.Rxyz.col(527) << std::endl;
-        // std::cout << "far_Exyz = \n" << far_ref.Exyz.col(527) << std::endl;
-        // std::cout << "far_Rpolar = \n" << far_ref.Rpolar.col(527) << std::endl;
-        // std::cout << "far_Epolar = \n" << far_ref.Epolar.col(527) << std::endl;
         std::cout << "far_Rpolar = \n" << far_ref.Rpolar << std::endl;
         std::cout << "far_Epolar = \n" << far_ref.Epolar << std::endl;
         near_ref.calcu_polar();
@@ -408,6 +445,40 @@ namespace calcu_field{
         for(int i = 0 ; i < x.size() ; i++){
             x[i] = i;
         }
+
+//  make datafile for gnuplot
+        FILE* dataf;
+        const char* filename = "datafile";
+        dataf = fopen(filename,"w");
+        for(int i = 0 ; i < vec_y[0].size() ; i++){
+            fprintf(dataf,"%f ",x[i]);
+            for(int j = 0 ; j < vec_y.size() ; j++){
+                fprintf(dataf,"%f ",vec_y[j][i]);
+            }
+            fprintf(dataf,"\n");
+        }
+        fclose(dataf);
+// gnuplot make graph
+        std::stringstream cmd;
+        cmd << "plot ";
+        for(int i = 0 ; i < vec_y.size() ; i++){
+            if(i == 0){
+                cmd << "\"" << filename << "\" using 1:2 with linespoints title \"ref\"";
+            }else{
+                cmd << ", \"" << filename << "\" using 1:"<< i+2 << " with linespoints title \"data" << i << "\"";
+            }
+        }
+
+        FILE* gp;
+        gp = popen("gnuplot -persist","w");
+        fprintf(gp,"set grid \n");
+        fprintf(gp,"set xlabel \"sample points\"\n");
+        fprintf(gp,"set ylabel \"gain[dB]\"\n");
+        fprintf(gp,"%s\n",cmd.str().c_str());
+        pclose(gp);
+
+        std::cout << cmd.str() << std::endl;
+        std::cout << "finish gnuplot" << std::endl;
         return 0;
     }
 }

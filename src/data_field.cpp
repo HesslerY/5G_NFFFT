@@ -7,7 +7,7 @@ namespace data_field{
     int field::read_file(std::string filename){
         std::ifstream inf(filename);
         if(!inf){
-            std::cout << "error cannot open the file" << std::endl;
+            ERR("error cannot open the file :"+filename);
             return 0;
         }
     //line number 1,2,3,4
@@ -61,6 +61,13 @@ namespace data_field{
     }
 
     int field::calcu_polar(){
+        if(Rpolar.size() != 0 || Epolar.size() != 0 ){
+            std::cout << "polar info is already calculated" << std::endl;
+            return 0;
+        }else{
+            std::cout << "#calcu Epolar and Rpolar from xyz" << std::endl;
+        }
+
         Rpolar = Matrix<double,3,Dynamic>::Zero(3,n_sample);
         Epolar = Matrix<double,3,Dynamic>::Zero(3,n_sample);
         for(int i = 0 ; i < n_sample ; i++){
@@ -83,6 +90,22 @@ namespace data_field{
     }
 
     int field::calcu_cart(){
+        if(Exyz != Matrix<double,3,Dynamic>::Zero(3,n_sample)){
+            std::cout << "Exyz info is already calculated" << std::endl;
+            return 0;
+        }else{
+            std::cout << "#calcu Exyz from Epolar" << std::endl;
+        }
+
+        for(int i = 0 ; i < n_sample ; i++){
+            double r_r = Rpolar(0,i);
+            double r_theata = Rpolar(1,i);
+            double r_phai = Rpolar(2,i);
+
+            Exyz(0,i) = Epolar(0,i)*std::sin(r_theata)*std::cos(r_phai) + Epolar(1,i)*std::cos(r_theata)*std::cos(r_phai) - Epolar(2,i)*std::sin(r_phai);
+            Exyz(1,i) = Epolar(0,i)*std::sin(r_theata)*std::sin(r_phai) + Epolar(1,i)*std::cos(r_theata)*std::sin(r_phai) + Epolar(2,i)*std::cos(r_phai);
+            Exyz(2,i) = Epolar(0,i)*std::cos(r_theata) - Epolar(1,i)*std::sin(r_theata);
+        }
         return 0;
     }
 
