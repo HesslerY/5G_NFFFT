@@ -7,9 +7,10 @@ namespace calcu_field{
         // define constant value
         k_0 = 2*pai*freq*std::sqrt(myu*eps);
         int d_0 = 6;
-        double d = 1.2e-2;
+        double d = 5e-3;
         L = (int) k_0*d + 1.8*std::pow(d_0,(double)2/3)*std::pow(k_0*d,(double(1/3)));
-        L = 15;
+        std::cout << "L = " << L << std::endl;
+        L = 10;
         std::cout << "L = " << L << std::endl;
         P_theata = L;
         // P_phai = 2*L + 1;
@@ -341,38 +342,41 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::calcu_error(const data_field::field& field_calcu,const data_field::field& ref){
+    int calcu::calcu_error(const data_field::field& field_calcu,const data_field::field& ref, std::string title = "title"){
         std::cout << "======= calcu error between two field  ========" << std::endl;
         Matrix<Complexd,3,Dynamic> error = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
 
         if(field_calcu.Rxyz != ref.Rxyz || field_calcu.Exyz.size() != ref.Exyz.size() ){
-            std::cout << "error(calcu_error) field between two fardata should the same" << std::endl;
+            ERR("error(calcu_error) field between two fardata should the same");
             std::cout << "======= calcu error between two field  end ========" << std::endl;
             return -1;
         }else{
             error = field_calcu.Exyz - ref.Exyz;
             double sum_error = 0;
             double sum_ref = 0;
+            double sum_data = 0;
             for(int i = 0 ; i < ref.Exyz.cols() ; i++){
                 sum_error += error.col(i).norm();
                 sum_ref += ref.Exyz.col(i).norm();
+                sum_data += field_calcu.Exyz.col(i).norm();
             }
 
             std::cout << "two fields Rxyz and Exyz.size() match" <<std::endl;
             std::cout << "far_ref Exyz = \n" << ref.Exyz << std::endl;
             std::cout << "fardata Exyz = \n" << field_calcu.Exyz << std::endl;
             std::cout << "error (fardata - far_ref) = \n" << error << std::endl; 
-            std::cout << "sum_error = " << sum_error << std::endl;
+            std::cout << "sum_data = " <<sum_data <<std::endl;
             std::cout << "sum_ref = " << sum_ref << std::endl;
-            std::cout << "error (%) = " << sum_error / sum_ref * 100 << std::endl;
+            std::cout << "sum_error = " << sum_error << std::endl;
+            std::cout << "error (%) = " << (sum_data - sum_ref) / sum_ref * 100 << std::endl;
 
             Matrix<double,2,Dynamic> mat_power = Matrix<double,2,Dynamic>::Zero(2,ref.n_sample);
             for(int i = 0 ; i < ref.n_sample ; i++){
                 mat_power(0,i) = ref.Exyz.col(i).norm();
                 mat_power(1,i) = field_calcu.Exyz.col(i).norm();
             }
-            plot_field(mat_power);
-            std::cout << "======= calcu error between two field  end ========" << std::endl;
+            plot_field(mat_power,title);
+            std::cout << "======= calcu error between two field end ========" << std::endl;
         }
         return 0;
     }
@@ -418,9 +422,8 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::plot_field(const MatrixXd& plot_field){
+    int calcu::plot_field(const MatrixXd& plot_field, std::string title = "graph title"){
         std::cout << plot_field.transpose() << std::endl;
-        // std::cout << plot_field.row(0).maxCoeff() << std::endl;
 
         std::vector<std::vector<double>> vec_y;
         // int size_col = std::min((int)plot_field.cols(), 200);
@@ -469,9 +472,12 @@ namespace calcu_field{
             }
         }
 
+        std::replace(title.begin(),title.end(),'_','-');
         FILE* gp;
         gp = popen("gnuplot -persist","w");
         fprintf(gp,"set grid \n");
+        fprintf(gp,"set title \"%s\"\n", title.c_str());
+        fprintf(gp,"set title font \"Helvetica 40\"\n");
         fprintf(gp,"set xlabel \"sample points\"\n");
         fprintf(gp,"set ylabel \"gain[dB]\"\n");
         fprintf(gp,"%s\n",cmd.str().c_str());

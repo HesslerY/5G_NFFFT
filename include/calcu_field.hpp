@@ -46,10 +46,10 @@ namespace calcu_field{
         int calcu_fardata2(data_field::field& field_calcu,const data_field::field& ref);
         int clacu_fardata3(data_field::field& field_calcu,const data_field::field& ref);
         int calcu_fardata_U(data_field::field& field_calcu,const data_field::field& ref);
-        int calcu_error(const data_field::field& field_calcu,const  data_field::field& ref);
+        int calcu_error(const data_field::field& field_calcu,const data_field::field& ref,std::string title);
         int calcu_ansbyEigen();
         int print_info();
-        int plot_field(const MatrixXd&);//plot E field by matplotlib
+        int plot_field(const MatrixXd&,std::string title);//plot E field by matplotlib
 
 
         Complexd calcu_T(Matrix<double,3,1> , Matrix<double,3,1>);

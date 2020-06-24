@@ -38,7 +38,8 @@ int main(int argc, char** argv){
     // calcu1.calcu_fardata_U(calcu1.fardata,calcu1.far_ref);
 
     calcu1.print_info();
-    calcu1.calcu_error(calcu1.fardata,calcu1.far_ref);
+    std::string title = file_near_ref + " to " + file_far_ref;
+    calcu1.calcu_error(calcu1.fardata,calcu1.far_ref,title);
 
     std::cout << "finish all calculation" << std::endl;
 
