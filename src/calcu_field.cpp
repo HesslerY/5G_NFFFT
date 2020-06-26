@@ -10,7 +10,7 @@ namespace calcu_field{
         double d = 5e-3;
         L = (int) k_0*d + 1.8*std::pow(d_0,(double)2/3)*std::pow(k_0*d,(double(1/3)));
         std::cout << "L = " << L << std::endl;
-        L = 10;
+        L = 12;
         std::cout << "L = " << L << std::endl;
         P_theata = L;
         // P_phai = 2*L + 1;
@@ -355,6 +355,7 @@ namespace calcu_field{
             double sum_error = 0;
             double sum_ref = 0;
             double sum_data = 0;
+            
             for(int i = 0 ; i < ref.Exyz.cols() ; i++){
                 sum_error += error.col(i).norm();
                 sum_ref += ref.Exyz.col(i).norm();
@@ -371,11 +372,21 @@ namespace calcu_field{
             std::cout << "error (%) = " << (sum_data - sum_ref) / sum_ref * 100 << std::endl;
 
             Matrix<double,2,Dynamic> mat_power = Matrix<double,2,Dynamic>::Zero(2,ref.n_sample);
+            Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,ref.n_sample);
             for(int i = 0 ; i < ref.n_sample ; i++){
-                mat_power(0,i) = ref.Exyz.col(i).norm();
-                mat_power(1,i) = field_calcu.Exyz.col(i).norm();
+                val_x(i) = i;
             }
-            plot_field(mat_power,title);
+            mat_power.row(0) = ref.Exyz.colwise().norm();
+            mat_power.row(1) = field_calcu.Exyz.colwise().norm();
+            Matrix<double,3,Dynamic> power_db = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
+            double max_power = mat_power.row(0).maxCoeff();
+            power_db.topRows(2) = 20*(mat_power.array() / max_power).log10();
+            // power_db = 20*(mat_power.array() / max_power).log10();
+            // power_db.row(2) = 20*(abs(mat_power.row(0).array() - mat_power.row(1).array())/max_power).log10();
+            power_db.row(2) = 20*(abs(mat_power.row(0).array() - mat_power.row(1).array())*mat_power.row(0).array().inverse()).log10();
+            // power_db.row(2) = 20*(error.colwise().norm().array()*mat_power.row(0).array().inverse()).log10();
+
+            plot_field(val_x,power_db,title);
             std::cout << "======= calcu error between two field end ========" << std::endl;
         }
         return 0;
@@ -422,41 +433,18 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::plot_field(const MatrixXd& plot_field, std::string title = "graph title"){
-        std::cout << plot_field.transpose() << std::endl;
-
-        std::vector<std::vector<double>> vec_y;
-        // int size_col = std::min((int)plot_field.cols(), 200);
-        int size_col = (int)plot_field.cols();
-        std::cout << "size = " << size_col << std::endl;
-        std::vector<double> x(size_col);
-        double val_max = plot_field.row(0).maxCoeff();
-
-        for(int i = 0 ; i < plot_field.rows() ; i++){
-            // double val_max = plot_field.row(i).maxCoeff();
-            std::cout << "val_max = " << val_max << std::endl;
-            std::vector<double> y(size_col);
-            for(int j = 0 ; j < size_col ; j++){
-                y[j] = 20*std::log10(plot_field(i,j) / val_max);
-            }
-            vec_y.push_back(y);
-            for(auto index : y){
-                std::cout << index << " " ;
-            }
-            std::cout << std::endl;
-        }
-        for(int i = 0 ; i < x.size() ; i++){
-            x[i] = i;
-        }
+    int calcu::plot_field(const MatrixXd& val_x, const MatrixXd& val_y, std::string title){
+        std::cout << val_y.transpose() << std::endl;
+// エラー処理が必要！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
 
 //  make datafile for gnuplot
         FILE* dataf;
         const char* filename = "datafile";
         dataf = fopen(filename,"w");
-        for(int i = 0 ; i < vec_y[0].size() ; i++){
-            fprintf(dataf,"%f ",x[i]);
-            for(int j = 0 ; j < vec_y.size() ; j++){
-                fprintf(dataf,"%f ",vec_y[j][i]);
+        for(int i = 0 ; i < val_y.cols() ; i++){
+            fprintf(dataf,"%f ",val_x(i));
+            for(int j = 0 ; j < val_y.rows() ; j++){
+                fprintf(dataf,"%f ",val_y(j,i));
             }
             fprintf(dataf,"\n");
         }
@@ -464,7 +452,7 @@ namespace calcu_field{
 // gnuplot make graph
         std::stringstream cmd;
         cmd << "plot ";
-        for(int i = 0 ; i < vec_y.size() ; i++){
+        for(int i = 0 ; i < val_y.rows() ; i++){
             if(i == 0){
                 cmd << "\"" << filename << "\" using 1:2 with linespoints title \"ref\"";
             }else{
@@ -477,9 +465,8 @@ namespace calcu_field{
         gp = popen("gnuplot -persist","w");
         fprintf(gp,"set grid \n");
         fprintf(gp,"set title \"%s\"\n", title.c_str());
-        fprintf(gp,"set title font \"Helvetica 40\"\n");
         fprintf(gp,"set xlabel \"sample points\"\n");
-        fprintf(gp,"set ylabel \"gain[dB]\"\n");
+        fprintf(gp,"set ylabel \"relative magnitude[dB]\"\n");
         fprintf(gp,"%s\n",cmd.str().c_str());
         pclose(gp);
 

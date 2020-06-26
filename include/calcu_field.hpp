@@ -49,7 +49,7 @@ namespace calcu_field{
         int calcu_error(const data_field::field& field_calcu,const data_field::field& ref,std::string title);
         int calcu_ansbyEigen();
         int print_info();
-        int plot_field(const MatrixXd&,std::string title);//plot E field by matplotlib
+        int plot_field(const MatrixXd& val_x,const MatrixXd& val_y , std::string title = "graph title");//plot x y and graph title by gnuplot
 
 
         Complexd calcu_T(Matrix<double,3,1> , Matrix<double,3,1>);

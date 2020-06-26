@@ -56,26 +56,12 @@ int main(int argc, char** argv){
     //     // std::cout << i <<"hankel_2 = " << sph_hankel_2(i,krm) <<std::endl;;
     // }
 
-    // MatrixXd mat(2,2);
-    // mat << 1 ,3 ,4 ,5;
-    // std::cout << mat * 3 << std::endl;
+    MatrixXd mat(2,2);
+    mat << 1 ,3 ,4 ,5;
+    // std::cout << mat.norm() << std::endl;
+    std::cout << mat.rowwise().norm() << std::endl;
+    std::cout << mat.array().log10() <<std::endl;
+    std::cout << mat.topRows(2) << std::endl;
 
-    //球面の数値計算 
-    // double result = 0;
-    // double pai = 3.141592;
-    // int L = 15;
-    // int p_theata = L;
-    // int p_phai = 2*L;
-    // double delta_theata = pai/(p_theata);
-    // double delta_phai = 2*pai/(p_phai);
-    // double w_theata = pai / (p_theata);
-    // double w_phai = 2*pai/ (p_phai);
-    // for(int i = 1 ; i <= p_theata ; i++){
-    //     for(int j = 1 ; j <= p_phai ; j++){
-    //         result += std::sin(delta_theata * i - delta_theata/2) * w_theata * w_phai;
-    //         std::cout << std::sin(delta_theata * i - delta_theata/2) <<std::endl;
-    //     }
-    // }
-    // std::cout << result << std::endl;
     return 0;
 }
