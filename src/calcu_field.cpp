@@ -303,7 +303,7 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::clacu_fardata3(data_field::field& field_calcu,const data_field::field& ref){
+    int calcu::calcu_fardata3(data_field::field& field_calcu,const data_field::field& ref){
         field_calcu.copy_data(ref);
 
         // Mat_XC temp = A * ans;
@@ -381,12 +381,27 @@ namespace calcu_field{
             Matrix<double,3,Dynamic> power_db = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
             double max_power = mat_power.row(0).maxCoeff();
             power_db.topRows(2) = 20*(mat_power.array() / max_power).log10();
-            // power_db = 20*(mat_power.array() / max_power).log10();
             // power_db.row(2) = 20*(abs(mat_power.row(0).array() - mat_power.row(1).array())/max_power).log10();
             power_db.row(2) = 20*(abs(mat_power.row(0).array() - mat_power.row(1).array())*mat_power.row(0).array().inverse()).log10();
             // power_db.row(2) = 20*(error.colwise().norm().array()*mat_power.row(0).array().inverse()).log10();
 
-            plot_field(val_x,power_db,title);
+            MatrixXd phase = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
+            phase.row(0) = arg(ref.Exyz.row(2).array())*360/(2*pai);
+            phase.row(1) = arg(field_calcu.Exyz.row(2).array())*360/(2*pai);
+
+            Matrix<double,5,Dynamic> plot_data = Matrix<double,5,Dynamic>::Zero(5,ref.n_sample);
+            plot_data.row(0) = power_db.row(0);
+            plot_data.row(1) = power_db.row(1);
+            plot_data.row(2) = power_db.row(2);
+            plot_data.row(3) = phase.row(0);
+            plot_data.row(4) = phase.row(1);
+            
+            std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
+            std::replace(title.begin(),title.end(),'_','-');
+            std::vector<std::string> graph_info{title,"sample points","relative mag[dB]","phase[{/Symbol \260}]"};
+            std::vector<int> axis{1,1,1,2,2};
+
+            plot_field_twoaxis(val_x,plot_data,axis,key_info,graph_info);
             std::cout << "======= calcu error between two field end ========" << std::endl;
         }
         return 0;
@@ -433,9 +448,27 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::plot_field(const MatrixXd& val_x, const MatrixXd& val_y, std::string title){
+// plot data by gnuplot
+    int calcu::plot_field(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<std::string> key_info, std::vector<std::string> graph_info){
         std::cout << val_y.transpose() << std::endl;
-// エラー処理が必要！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+        if(val_x.cols() != val_y.cols()){
+            ERR("error : plot data should have the same cols");
+        }
+
+        if(graph_info.size() == 0){
+            graph_info.resize(4);
+            graph_info[0] = "sample title";
+            graph_info[1] = "xlabel";
+            graph_info[2] = "y1label";
+            graph_info[3] = "y2label";
+        }
+        if(key_info.size() == 0 ){
+            key_info.resize(val_y.size());
+            key_info[0] = "ref";
+            for(int i = 1 ; i < key_info.size() ; i++){
+                key_info[i] = "data" + std::to_string(i);
+            }
+        }
 
 //  make datafile for gnuplot
         FILE* dataf;
@@ -449,28 +482,91 @@ namespace calcu_field{
             fprintf(dataf,"\n");
         }
         fclose(dataf);
-// gnuplot make graph
-        std::stringstream cmd;
-        cmd << "plot ";
-        for(int i = 0 ; i < val_y.rows() ; i++){
-            if(i == 0){
-                cmd << "\"" << filename << "\" using 1:2 with linespoints title \"ref\"";
-            }else{
-                cmd << ", \"" << filename << "\" using 1:"<< i+2 << " with linespoints title \"data" << i << "\"";
-            }
-        }
 
-        std::replace(title.begin(),title.end(),'_','-');
+// gnuplot make graph
         FILE* gp;
         gp = popen("gnuplot -persist","w");
         fprintf(gp,"set grid \n");
-        fprintf(gp,"set title \"%s\"\n", title.c_str());
-        fprintf(gp,"set xlabel \"sample points\"\n");
-        fprintf(gp,"set ylabel \"relative magnitude[dB]\"\n");
-        fprintf(gp,"%s\n",cmd.str().c_str());
+        fprintf(gp,"set title \"%s\"\n", graph_info[0].c_str());
+        fprintf(gp,"set xlabel \"%s\"\n",graph_info[1].c_str());
+        fprintf(gp,"set ylabel \"%s\"\n",graph_info[2].c_str());
+        fprintf(gp,"set y2label \"%s\"\n",graph_info[3].c_str());
+        // fprintf(gp,"%s\n",cmd.str().c_str());
+
+        for(int i = 0 ; i < val_y.rows() ; i++){
+            if(i == 0){
+                fprintf(gp,"plot \"%s\" using 1:2 with linespoints title \"%s\"\n",filename,key_info[0].c_str());
+            }else{
+                fprintf(gp,"replot \"%s\" using 1:%d with linespoints title \"%s\"\n",filename,i+2,key_info[i].c_str());
+            }
+        }
         pclose(gp);
 
-        std::cout << cmd.str() << std::endl;
+        // std::cout << cmd.str() << std::endl;
+        std::cout << "finish gnuplot" << std::endl;
+        return 0;
+    }
+
+    int calcu::plot_field_twoaxis(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<int> axis, std::vector<std::string> key_info, std::vector<std::string> graph_info){
+        // std::cout << val_y.transpose() << std::endl;
+        if(val_x.cols() != val_y.cols() || val_y.rows() != axis.size()){
+            ERR("error : plot data should have the same cols");
+        }
+        // error 処理　axis,keyinfo,graphinfo size
+        
+        if(graph_info.size() == 0){
+            graph_info.resize(4);
+            graph_info[0] = "sample title";
+            graph_info[1] = "xlabel";
+            graph_info[2] = "y1label";
+            graph_info[3] = "y2label";
+        }
+        if(key_info.size() == 0 ){
+            key_info.resize(val_y.size());
+            key_info[0] = "ref";
+            for(int i = 1 ; i < key_info.size() ; i++){
+                key_info[i] = "data" + std::to_string(i);
+            }
+        }
+
+    //  make datafile for gnuplot
+        FILE* dataf;
+        const char* filename = "datafile";
+        dataf = fopen(filename,"w");
+        for(int i = 0 ; i < val_y.cols() ; i++){
+            fprintf(dataf,"%f ",val_x(i));
+            for(int j = 0 ; j < val_y.rows() ; j++){
+                fprintf(dataf,"%f ",val_y(j,i));
+            }
+            fprintf(dataf,"\n");
+        }
+        fclose(dataf);
+
+    // gnuplot make graph
+        FILE* gp;
+        gp = popen("gnuplot -persist","w");
+        fprintf(gp,"set grid \n");
+        fprintf(gp,"set title \"%s\"\n", graph_info[0].c_str());
+        fprintf(gp,"set xlabel \"%s\"\n",graph_info[1].c_str());
+        fprintf(gp,"set ylabel \"%s\"\n",graph_info[2].c_str());
+        fprintf(gp,"set y2label \"%s\"\n",graph_info[3].c_str());
+        fprintf(gp,"set y2tics\n");
+
+        for(int i = 0 ; i < val_y.rows() ; i++){
+            int y_axis = axis[i];
+            if(y_axis != 1 && y_axis != 2){
+                ERR("gnuplot error: axis should be 1 or 2");
+            }
+
+            if(i == 0){
+                fprintf(gp,"plot \"%s\" using 1:2 axis x1y%d with linespoints title \"%s\"\n",filename,y_axis,key_info[0].c_str());
+            }else{
+                fprintf(gp,"replot \"%s\" using 1:%d axis x1y%d with linespoints title \"%s\"\n",filename,i+2,y_axis,key_info[i].c_str());
+            }
+        }
+        pclose(gp);
+
+        // std::cout << cmd.str() << std::endl;
         std::cout << "finish gnuplot" << std::endl;
         return 0;
     }

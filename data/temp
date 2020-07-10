@@ -1,0 +1,19 @@
+argc=3
+this is calcu field constructa
+#finish read file = sample.txt
+========== file info ===========
+antenna name = dipole
+antenna size = 0.00555556
+surface type = 0
+n_sample = 256
+space = 0.005
+freq = 2.7e+10
+data size = 256
+========== end info ===========
+finish all calculation
+3.16228
+6.40312
+       0 0.477121
+ 0.60206  0.69897
+1 3
+4 5

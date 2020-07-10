@@ -7,29 +7,68 @@ namespace data_field{
     int field::read_file(std::string filename){
         std::ifstream inf(filename);
         if(!inf){
-            ERR("error cannot open the file :"+filename);
+            ERR("error cannot open the file :"+ filename);
             return 0;
         }
-    //line number 1,2,3,4
+    //antenna info format
         std::string str;
         char delim = '=';
-        int line = 0;
-        while(line < 4){
-            getline(inf, str);
+        while(getline(inf, str)){
+            if(str == "#data"){
+                break;
+            }
+
+            // antenna info =int or string
             std::stringstream ss(str);
             std::string element;
-            getline(ss,element,delim);
-            getline(ss,element,delim);
-            if(line == 0){
-                z = std::stod(element);
-            }else if(line == 1){
-                freq = std::stod(element);
-            }else if(line == 2){
-                n_sample = std::stoi(element);
+            int info_type = 0;
+            while(getline(ss,element,delim)){
+                if(info_type == 0){
+                    if(element == "antenna name"){
+                        info_type = 1;
+                    }else if(element == "antenna size"){
+                        info_type = 2;
+                    }else if(element == "measurement surface"){
+                        info_type = 3;
+                    }else if(element == "freq"){
+                        info_type = 4;
+                    }else if(element == "sampling point"){
+                        info_type = 5;
+                    }else if(element == "sampling space"){
+                        info_type = 6;
+                    }else{
+                        ERR("unknown file format : " + element);
+                    }
+                }else{
+                    switch (info_type){
+                        case 1:
+                            antenna_name = element;
+                            break;
+                        case 2:
+                            antenna_size = std::stod(element);
+                            break;
+                        case 3:
+                            surface_type = 0; //surface type is not used yet
+                            break;
+                        case 4:
+                            freq = std::stod(element);
+                            break;
+                        case 5:
+                            n_sample = std::stoi(element);
+                            break;
+                        case 6:
+                            space = std::stod(element);
+                            break;
+                        default:
+                            ERR("reading file format is not correct (case default)\n");
+                            break;
+                    }
+                }
             }
-            line++;
         }
-    //line number > 4 (x,y,z,realEx,realEy,realEz,imgEx,imgEy,imgEz)
+
+        getline(inf,str);
+    //data csv format (x,y,z,realEx,realEy,realEz,imgEx,imgEy,imgEz)
         Rxyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
         Exyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
         delim = ',';
@@ -38,7 +77,6 @@ namespace data_field{
             std::stringstream ss(str);
             std::string element;
             int index = 0;
-
             while(getline(ss,element,delim)){
                 if(index < 3){
                     Rxyz(index,column) = std::stod(element);
@@ -56,7 +94,6 @@ namespace data_field{
             column++;
         }
         std::cout << "#finish read file = " << filename <<std::endl;
-
         return 1;
     }
 
@@ -115,5 +152,19 @@ namespace data_field{
         freq = in_field.freq;
         Exyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
         return 0;
+    }
+
+    int field::print_info(){
+        std::cout << "========== file info ===========" <<std::endl;
+        std::cout << "antenna name = " << antenna_name << std::endl;
+        std::cout << "antenna size = " << antenna_size << std::endl;
+        std::cout << "surface type = " << surface_type << std::endl;
+        std::cout << "n_sample = " << n_sample << std::endl;
+        std::cout << "space = " << space << std::endl;
+        std::cout << "freq = " << freq << std::endl;
+
+        std::cout << "data size = " << Rxyz.cols() <<std::endl;
+        std::cout << "Exyz = " << Exyz.transpose() << std::endl;
+        std::cout << "========== end info ===========" << std::endl;
     }
 }
