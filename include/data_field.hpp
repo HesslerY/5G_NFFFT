@@ -8,7 +8,7 @@
 using namespace Eigen;
 
 typedef Matrix<std::complex<double>,Dynamic,Dynamic> Mat_XC;
-typedef std::complex<double> Complexd;
+
 
 namespace data_field{
     class field{

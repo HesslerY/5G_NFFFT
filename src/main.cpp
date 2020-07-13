@@ -40,7 +40,7 @@ int main(int argc, char** argv){
     // calcu1.calcu_fardata3(calcu1.fardata,calcu1.far_ref);
     // calcu1.calcu_fardata_U(calcu1.fardata,calcu1.far_ref);
 
-    // calcu1.print_info();
+    calcu1.print_info();
     std::string title = file_near_ref + " to " + file_far_ref;
     calcu1.calcu_error(calcu1.fardata,calcu1.far_ref,title);
     // calcu1.calcu_phase(calcu1.fardata,calcu1.far_ref);
@@ -66,6 +66,9 @@ int main(int argc, char** argv){
     // std::cout << mat.rowwise().norm() << std::endl;
     // std::cout << mat.array().log10() <<std::endl;
     // std::cout << mat.topRows(2) << std::endl;
+
+    Complexd temp(-2,-1e-10);
+    std::cout << c_check(temp) <<std::endl;
 
     return 0;
 }

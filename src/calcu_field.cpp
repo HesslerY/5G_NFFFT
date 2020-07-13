@@ -7,17 +7,17 @@ namespace calcu_field{
         // define constant value
         k_0 = 2*pai*freq*std::sqrt(myu*eps);
         int d_0 = 6;
-        double d = 5e-3;
+        double d = near_ref.antenna_size;
         L = (int) k_0*d + 1.8*std::pow(d_0,(double)2/3)*std::pow(k_0*d,(double(1/3)));
         std::cout << "L = " << L << std::endl;
-        L = 12;
+        L = 30;
         std::cout << "L = " << L << std::endl;
         P_theata = L;
         // P_phai = 2*L + 1;
-        P_phai = 2*L;
-        P = P_theata * P_phai;
-        w_theata = pai/(P_theata);
-        w_phai = 2*pai/(P_phai);
+        P_phai = 2*L - 1;
+        P = P_theata * P_phai; //分点数
+        w_theata = pai/(P_theata - 1); // 幅
+        w_phai = 2*pai/(P_phai - 1);
 
         // set measured U vector ()
         near_ref.calcu_polar();
@@ -32,31 +32,72 @@ namespace calcu_field{
         U_mea = MatrixXd::Zero(near_ref.n_sample * 2 ,1);
         for(int i = 0 ; i < near_ref.n_sample * 2 ; i++){
             if(i < near_ref.n_sample){
-                U_mea(i) = near_ref.Epolar(1,i);
+                U_mea(i) = c_check(near_ref.Epolar(1,i));
             }else{
-                U_mea(i) = near_ref.Epolar(2,i-near_ref.n_sample);
+                U_mea(i) = c_check(near_ref.Epolar(2,i-near_ref.n_sample));
             }
         }
 
         // make wavenumber vec_k
-        double delta_theata = pai/(P_theata);
-        double delta_phai = 2*pai/(P_phai);
-        for(int n_theata = 1 ; n_theata <= P_theata ; n_theata++){
-            for(int n_phai = 1 ; n_phai <= P_phai ; n_phai++){
+        double delta_theata = pai/(P_theata - 1);
+        double delta_phai = 2*pai/(P_phai -1);
+        // for(int n_theata = 1 ; n_theata <= P_theata ; n_theata++){
+        //     for(int n_phai = 1 ; n_phai <= P_phai ; n_phai++){
+        //         Matrix<double,3,1> k;
+        //         Matrix<double,2,1> angle;
+        //         double theata = delta_theata*n_theata - delta_theata / 2;
+        //         double phai = delta_phai * n_phai - delta_phai / 2;
+        //         double x = std::sin(theata) * std::cos(phai);
+        //         double y = std::sin(theata) * std::sin(phai);
+        //         double z = std::cos(theata);
+        //         k << x,y,z;
+        //         angle << theata, phai;
+        //         vec_k.push_back(k);
+        //         vec_sin.push_back(std::sin(theata));
+        //         vec_k_angle.push_back(angle);
+        //     }
+        // }
+
+        // 台形分割
+        for(int n_theata = 0 ; n_theata < P_theata ; n_theata++){
+            for(int n_phai = 0 ; n_phai < P_phai ; n_phai++){
                 Matrix<double,3,1> k;
                 Matrix<double,2,1> angle;
-                double theata = delta_theata*n_theata - delta_theata / 2;
-                double phai = delta_phai * n_phai - delta_phai / 2;
+                double theata = delta_theata*n_theata ;
+                double phai = delta_phai * n_phai ;
                 double x = std::sin(theata) * std::cos(phai);
                 double y = std::sin(theata) * std::sin(phai);
                 double z = std::cos(theata);
                 k << x,y,z;
                 angle << theata, phai;
                 vec_k.push_back(k);
-                vec_sin.push_back(std::sin(theata));
+                vec_sin.push_back(d_check(std::sin(theata)));
+
                 vec_k_angle.push_back(angle);
+
+                if(n_theata == 0 || n_theata == P_theata -1){
+                    if(n_phai == 0 || n_phai == P_phai -1){
+                        // weight.push_back(delta_phai * delta_theata / 4);
+                        weight.push_back(delta_phai * delta_theata );
+                    }else{
+                        // weight.push_back(delta_phai * delta_theata / 2);
+                        weight.push_back(delta_phai * delta_theata );
+                    }
+                }else{
+                    if(n_phai == 0 || n_phai == P_phai -1){
+                        // weight.push_back(delta_phai * delta_theata / 2);
+                        weight.push_back(delta_phai * delta_theata );
+                    }else{
+                        weight.push_back(delta_phai * delta_theata );
+                    }
+                }
             }
         }
+
+        // for(int i = 0; i < vec_k.size() ; i++){
+        //     std::cout << "k = \n" << vec_k[i] << std::endl;
+        //     std::cout << ":" << weight[i] << std::endl;
+        // }
         return 0;
     }
 
@@ -74,12 +115,12 @@ namespace calcu_field{
                     if(i < n_sample){
                         std::complex<double> temp_T = calcu_T(vec_k[j],Rxyz.col(i));
                         std::complex<double> temp_W = provepattern_theata(vec_k[j],i);
-                        mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
+                        mat_cup(i,j) = weight[j]*temp_T*temp_W*vec_sin[j];
                     }else if(n_sample <= i && i < 2*n_sample){
                     // second polarization (phi)
                         std::complex<double> temp_T = calcu_T(vec_k[j],Rxyz.col(i - n_sample));
                         std::complex<double> temp_W = provepattern_theata(vec_k[j],i - n_sample);
-                        // mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
+                        // mat_cup(i,j) = weight[j]*temp_T*temp_W*vec_sin[j];
                         mat_cup(i,j) = 0;
                     }else{
                         std::cout << "error index of mat_cup is wrong" << std::endl;
@@ -91,12 +132,12 @@ namespace calcu_field{
                     if(i < n_sample){
                         std::complex<double> temp_T = calcu_T(vec_k[j-P],Rxyz.col(i));
                         std::complex<double> temp_W = provepattern_phai(vec_k[j-P],i);
-                        // mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
+                        // mat_cup(i,j) = weight[j-P]*temp_T*temp_W*vec_sin[j-P];
                         mat_cup(i,j) = 0;
                     }else if(n_sample <= i && i < 2*n_sample){
                         std::complex<double> temp_T = calcu_T(vec_k[j-P],Rxyz.col(i - n_sample));
                         std::complex<double> temp_W = provepattern_phai(vec_k[j-P],i - n_sample);
-                        mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
+                        mat_cup(i,j) = weight[j-P]*temp_T*temp_W*vec_sin[j-P];
                     }else{
                         std::cout << "error index of mat_cup is wrong" << std::endl;
                     }
@@ -258,7 +299,6 @@ namespace calcu_field{
         //     field_calcu.Exyz(2,i) = -E_theata*std::sin(r_theata);
         //     // std::cout << "theata,phai = " << r_theata << " " << r_phai << std::endl;
         //     std::cout << "E_theata,E_phai = " << E_theata << " " << E(i) << "," << E_phai << " " << E(i+field_calcu.n_sample) << std::endl;
-
         // }
 
         for(int i= 0 ; i < field_calcu.Rxyz.cols() ; i++){
@@ -436,13 +476,13 @@ namespace calcu_field{
 
         std::cout << "========= info debug =========" << std::endl;
         far_ref.calcu_polar();
-        std::cout << "far_Rpolar = \n" << far_ref.Rpolar << std::endl;
+        // std::cout << "far_Rpolar = \n" << far_ref.Rpolar << std::endl;
         std::cout << "far_Epolar = \n" << far_ref.Epolar << std::endl;
         near_ref.calcu_polar();
-        std::cout << "near_ref_Rpolar = \n" << near_ref.Rpolar << std::endl;
+        // std::cout << "near_ref_Rpolar = \n" << near_ref.Rpolar << std::endl;
         std::cout << "near_ref_Epolar = \n" << near_ref.Epolar << std::endl;
         fardata.calcu_polar();
-        std::cout << "fardata_Rpolar = \n" << fardata.Rpolar << std::endl;
+        // std::cout << "fardata_Rpolar = \n" << fardata.Rpolar << std::endl;
         std::cout << "fardata_Epolar = \n" << fardata.Epolar << std::endl;
         std::cout << "========= end info debug =========" << std::endl;
         return 0;

@@ -3,15 +3,15 @@
 
 namespace calcu_field{
     class calcu{
-    public:    
+    public:
         calcu(){
             std::cout << "this is calcu field constructa"  << std::endl;
         }
         
     public:
         static constexpr double pai = 3.141592653589793;
-        static constexpr double myu = 1.25663706212e-6; //myu_0 [N A^(-2)]
-        static constexpr double eps = 8.8541878128e-12; // eps_0 [F m^(-1)]
+        static constexpr double myu = 1.256637062121e-6; //myu_0 [N A^(-2)]
+        static constexpr double eps = 8.854187812813e-12; // eps_0 [F m^(-1)]
         static constexpr double freq = 27e9;// 27Ghz;
         static constexpr double accur_SVD = 1;// singular value less than this is set to be 0 
 
@@ -25,6 +25,10 @@ namespace calcu_field{
         double k_0;
         Complexd coeff_A;
 
+
+        // std::vector<double> weight_phai;
+        // std::vector<double> weight_theata;
+        std::vector<double> weight;
         std::vector<Matrix<double,3,1>> vec_k;
         std::vector<double> vec_sin; // vec of sin theata
         std::vector<Matrix<double,2,1>> vec_k_angle; // vec[i][0] = theata_i , vec[i][1] = phai_i
