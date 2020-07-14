@@ -16,11 +16,13 @@ int main(int argc, char** argv){
 
     std::cout << "argc=" << argc << std::endl;
     if(argc != 3){
-        std::cout << "error (./field_trans nearfield.txt farfield.txt)" <<std::endl;
+        ERR("error (./field_trans nearfield.txt farfield.txt)");
     }
 
     std::string file_near_ref;
     std::string file_far_ref;
+
+    std::cout.precision(15);
 
     file_near_ref = argv[1];
     file_far_ref = argv[2];
@@ -28,17 +30,20 @@ int main(int argc, char** argv){
     calcu_field::calcu calcu1;
     calcu1.near_ref.read_file(file_near_ref);
     calcu1.far_ref.read_file(file_far_ref);
+    // calcu1.near_ref.print_info();
     calcu1.start_calcu();
     calcu1.set_matrix(calcu1.A,calcu1.near_ref.Rxyz);
     // calcu1.calcu_ansbySVD();
     calcu1.calcu_ansbyEigen();
     calcu1.calcu_fardata(calcu1.fardata,calcu1.far_ref);
     // calcu1.calcu_fardata2(calcu1.fardata,calcu1.far_ref);
-    // calcu1.clacu_fardata3(calcu1.fardata,calcu1.far_ref);
+    // calcu1.calcu_fardata3(calcu1.fardata,calcu1.far_ref);
     // calcu1.calcu_fardata_U(calcu1.fardata,calcu1.far_ref);
 
     calcu1.print_info();
-    calcu1.calcu_error(calcu1.fardata,calcu1.far_ref);
+    std::string title = file_near_ref + " to " + file_far_ref;
+    calcu1.calcu_error(calcu1.fardata,calcu1.far_ref,title);
+    // calcu1.calcu_phase(calcu1.fardata,calcu1.far_ref);
 
     std::cout << "finish all calculation" << std::endl;
 
@@ -57,24 +62,13 @@ int main(int argc, char** argv){
 
     // MatrixXd mat(2,2);
     // mat << 1 ,3 ,4 ,5;
-    // std::cout << mat * 3 << std::endl;
+    // // std::cout << mat.norm() << std::endl;
+    // std::cout << mat.rowwise().norm() << std::endl;
+    // std::cout << mat.array().log10() <<std::endl;
+    // std::cout << mat.topRows(2) << std::endl;
 
-    //球面の数値計算 
-    // double result = 0;
-    // double pai = 3.141592;
-    // int L = 15;
-    // int p_theata = L;
-    // int p_phai = 2*L;
-    // double delta_theata = pai/(p_theata);
-    // double delta_phai = 2*pai/(p_phai);
-    // double w_theata = pai / (p_theata);
-    // double w_phai = 2*pai/ (p_phai);
-    // for(int i = 1 ; i <= p_theata ; i++){
-    //     for(int j = 1 ; j <= p_phai ; j++){
-    //         result += std::sin(delta_theata * i - delta_theata/2) * w_theata * w_phai;
-    //         std::cout << std::sin(delta_theata * i - delta_theata/2) <<std::endl;
-    //     }
-    // }
-    // std::cout << result << std::endl;
+    Complexd temp(-2,-1e-10);
+    std::cout << c_check(temp) <<std::endl;
+
     return 0;
 }

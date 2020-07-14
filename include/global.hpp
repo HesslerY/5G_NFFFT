@@ -17,6 +17,8 @@
 
 #include <unistd.h>
 
+typedef std::complex<double> Complexd;
+
 inline void ERR(std::string err_msg) {
   std::cerr << err_msg << std::endl;
 }
@@ -31,4 +33,23 @@ inline std::complex<double> sph_hankel_2(unsigned n, double x){
     return result;
 }
 
+inline double d_check(double val, double check_less = 1e-10){
+    if(abs(val) < check_less){
+        return 0;
+    }else{
+        return val;
+    }
+}
+
+inline Complexd c_check(Complexd val, double check_less = 1e-10){
+    if(abs(val.real()) < check_less){
+        val.real(0);
+    }
+    if(abs(val.imag()) < check_less){
+        val.imag(0);
+    }
+    return val;
+}
+
 #endif // _GLOBAL_H_INCLUDED
+

@@ -7,16 +7,17 @@ namespace calcu_field{
         // define constant value
         k_0 = 2*pai*freq*std::sqrt(myu*eps);
         int d_0 = 6;
-        double d = 1.2e-2;
+        double d = near_ref.antenna_size;
         L = (int) k_0*d + 1.8*std::pow(d_0,(double)2/3)*std::pow(k_0*d,(double(1/3)));
-        L = 15;
+        std::cout << "L = " << L << std::endl;
+        L = 30;
         std::cout << "L = " << L << std::endl;
         P_theata = L;
         // P_phai = 2*L + 1;
-        P_phai = 2*L;
-        P = P_theata * P_phai;
-        w_theata = pai/(P_theata);
-        w_phai = 2*pai/(P_phai);
+        P_phai = 2*L - 1;
+        P = P_theata * P_phai; //分点数
+        w_theata = pai/(P_theata - 1); // 幅
+        w_phai = 2*pai/(P_phai - 1);
 
         // set measured U vector ()
         near_ref.calcu_polar();
@@ -31,31 +32,72 @@ namespace calcu_field{
         U_mea = MatrixXd::Zero(near_ref.n_sample * 2 ,1);
         for(int i = 0 ; i < near_ref.n_sample * 2 ; i++){
             if(i < near_ref.n_sample){
-                U_mea(i) = near_ref.Epolar(1,i);
+                U_mea(i) = c_check(near_ref.Epolar(1,i));
             }else{
-                U_mea(i) = near_ref.Epolar(2,i-near_ref.n_sample);
+                U_mea(i) = c_check(near_ref.Epolar(2,i-near_ref.n_sample));
             }
         }
 
         // make wavenumber vec_k
-        double delta_theata = pai/(P_theata);
-        double delta_phai = 2*pai/(P_phai);
-        for(int n_theata = 1 ; n_theata <= P_theata ; n_theata++){
-            for(int n_phai = 1 ; n_phai <= P_phai ; n_phai++){
+        double delta_theata = pai/(P_theata - 1);
+        double delta_phai = 2*pai/(P_phai -1);
+        // for(int n_theata = 1 ; n_theata <= P_theata ; n_theata++){
+        //     for(int n_phai = 1 ; n_phai <= P_phai ; n_phai++){
+        //         Matrix<double,3,1> k;
+        //         Matrix<double,2,1> angle;
+        //         double theata = delta_theata*n_theata - delta_theata / 2;
+        //         double phai = delta_phai * n_phai - delta_phai / 2;
+        //         double x = std::sin(theata) * std::cos(phai);
+        //         double y = std::sin(theata) * std::sin(phai);
+        //         double z = std::cos(theata);
+        //         k << x,y,z;
+        //         angle << theata, phai;
+        //         vec_k.push_back(k);
+        //         vec_sin.push_back(std::sin(theata));
+        //         vec_k_angle.push_back(angle);
+        //     }
+        // }
+
+        // 台形分割
+        for(int n_theata = 0 ; n_theata < P_theata ; n_theata++){
+            for(int n_phai = 0 ; n_phai < P_phai ; n_phai++){
                 Matrix<double,3,1> k;
                 Matrix<double,2,1> angle;
-                double theata = delta_theata*n_theata - delta_theata / 2;
-                double phai = delta_phai * n_phai - delta_phai / 2;
+                double theata = delta_theata*n_theata ;
+                double phai = delta_phai * n_phai ;
                 double x = std::sin(theata) * std::cos(phai);
                 double y = std::sin(theata) * std::sin(phai);
                 double z = std::cos(theata);
                 k << x,y,z;
                 angle << theata, phai;
                 vec_k.push_back(k);
-                vec_sin.push_back(std::sin(theata));
+                vec_sin.push_back(d_check(std::sin(theata)));
+
                 vec_k_angle.push_back(angle);
+
+                if(n_theata == 0 || n_theata == P_theata -1){
+                    if(n_phai == 0 || n_phai == P_phai -1){
+                        // weight.push_back(delta_phai * delta_theata / 4);
+                        weight.push_back(delta_phai * delta_theata );
+                    }else{
+                        // weight.push_back(delta_phai * delta_theata / 2);
+                        weight.push_back(delta_phai * delta_theata );
+                    }
+                }else{
+                    if(n_phai == 0 || n_phai == P_phai -1){
+                        // weight.push_back(delta_phai * delta_theata / 2);
+                        weight.push_back(delta_phai * delta_theata );
+                    }else{
+                        weight.push_back(delta_phai * delta_theata );
+                    }
+                }
             }
         }
+
+        // for(int i = 0; i < vec_k.size() ; i++){
+        //     std::cout << "k = \n" << vec_k[i] << std::endl;
+        //     std::cout << ":" << weight[i] << std::endl;
+        // }
         return 0;
     }
 
@@ -73,12 +115,12 @@ namespace calcu_field{
                     if(i < n_sample){
                         std::complex<double> temp_T = calcu_T(vec_k[j],Rxyz.col(i));
                         std::complex<double> temp_W = provepattern_theata(vec_k[j],i);
-                        mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
+                        mat_cup(i,j) = weight[j]*temp_T*temp_W*vec_sin[j];
                     }else if(n_sample <= i && i < 2*n_sample){
                     // second polarization (phi)
                         std::complex<double> temp_T = calcu_T(vec_k[j],Rxyz.col(i - n_sample));
                         std::complex<double> temp_W = provepattern_theata(vec_k[j],i - n_sample);
-                        // mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j];
+                        // mat_cup(i,j) = weight[j]*temp_T*temp_W*vec_sin[j];
                         mat_cup(i,j) = 0;
                     }else{
                         std::cout << "error index of mat_cup is wrong" << std::endl;
@@ -90,12 +132,12 @@ namespace calcu_field{
                     if(i < n_sample){
                         std::complex<double> temp_T = calcu_T(vec_k[j-P],Rxyz.col(i));
                         std::complex<double> temp_W = provepattern_phai(vec_k[j-P],i);
-                        // mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
+                        // mat_cup(i,j) = weight[j-P]*temp_T*temp_W*vec_sin[j-P];
                         mat_cup(i,j) = 0;
                     }else if(n_sample <= i && i < 2*n_sample){
                         std::complex<double> temp_T = calcu_T(vec_k[j-P],Rxyz.col(i - n_sample));
                         std::complex<double> temp_W = provepattern_phai(vec_k[j-P],i - n_sample);
-                        mat_cup(i,j) = w_theata*w_phai*temp_T*temp_W*vec_sin[j-P];
+                        mat_cup(i,j) = weight[j-P]*temp_T*temp_W*vec_sin[j-P];
                     }else{
                         std::cout << "error index of mat_cup is wrong" << std::endl;
                     }
@@ -257,7 +299,6 @@ namespace calcu_field{
         //     field_calcu.Exyz(2,i) = -E_theata*std::sin(r_theata);
         //     // std::cout << "theata,phai = " << r_theata << " " << r_phai << std::endl;
         //     std::cout << "E_theata,E_phai = " << E_theata << " " << E(i) << "," << E_phai << " " << E(i+field_calcu.n_sample) << std::endl;
-
         // }
 
         for(int i= 0 ; i < field_calcu.Rxyz.cols() ; i++){
@@ -302,7 +343,7 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::clacu_fardata3(data_field::field& field_calcu,const data_field::field& ref){
+    int calcu::calcu_fardata3(data_field::field& field_calcu,const data_field::field& ref){
         field_calcu.copy_data(ref);
 
         // Mat_XC temp = A * ans;
@@ -341,38 +382,67 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::calcu_error(const data_field::field& field_calcu,const data_field::field& ref){
+    int calcu::calcu_error(const data_field::field& field_calcu,const data_field::field& ref, std::string title = "title"){
         std::cout << "======= calcu error between two field  ========" << std::endl;
         Matrix<Complexd,3,Dynamic> error = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
 
         if(field_calcu.Rxyz != ref.Rxyz || field_calcu.Exyz.size() != ref.Exyz.size() ){
-            std::cout << "error(calcu_error) field between two fardata should the same" << std::endl;
+            ERR("error(calcu_error) field between two fardata should the same");
             std::cout << "======= calcu error between two field  end ========" << std::endl;
             return -1;
         }else{
             error = field_calcu.Exyz - ref.Exyz;
             double sum_error = 0;
             double sum_ref = 0;
+            double sum_data = 0;
+            
             for(int i = 0 ; i < ref.Exyz.cols() ; i++){
                 sum_error += error.col(i).norm();
                 sum_ref += ref.Exyz.col(i).norm();
+                sum_data += field_calcu.Exyz.col(i).norm();
             }
 
             std::cout << "two fields Rxyz and Exyz.size() match" <<std::endl;
             std::cout << "far_ref Exyz = \n" << ref.Exyz << std::endl;
             std::cout << "fardata Exyz = \n" << field_calcu.Exyz << std::endl;
             std::cout << "error (fardata - far_ref) = \n" << error << std::endl; 
-            std::cout << "sum_error = " << sum_error << std::endl;
+            std::cout << "sum_data = " <<sum_data <<std::endl;
             std::cout << "sum_ref = " << sum_ref << std::endl;
-            std::cout << "error (%) = " << sum_error / sum_ref * 100 << std::endl;
+            std::cout << "sum_error = " << sum_error << std::endl;
+            std::cout << "error (%) = " << (sum_data - sum_ref) / sum_ref * 100 << std::endl;
 
             Matrix<double,2,Dynamic> mat_power = Matrix<double,2,Dynamic>::Zero(2,ref.n_sample);
+            Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,ref.n_sample);
             for(int i = 0 ; i < ref.n_sample ; i++){
-                mat_power(0,i) = ref.Exyz.col(i).norm();
-                mat_power(1,i) = field_calcu.Exyz.col(i).norm();
+                val_x(i) = i;
             }
-            plot_field(mat_power);
-            std::cout << "======= calcu error between two field  end ========" << std::endl;
+            mat_power.row(0) = ref.Exyz.colwise().norm();
+            mat_power.row(1) = field_calcu.Exyz.colwise().norm();
+            Matrix<double,3,Dynamic> power_db = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
+            double max_power = mat_power.row(0).maxCoeff();
+            power_db.topRows(2) = 20*(mat_power.array() / max_power).log10();
+            // power_db.row(2) = 20*(abs(mat_power.row(0).array() - mat_power.row(1).array())/max_power).log10();
+            power_db.row(2) = 20*(abs(mat_power.row(0).array() - mat_power.row(1).array())*mat_power.row(0).array().inverse()).log10();
+            // power_db.row(2) = 20*(error.colwise().norm().array()*mat_power.row(0).array().inverse()).log10();
+
+            MatrixXd phase = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
+            phase.row(0) = arg(ref.Exyz.row(2).array())*360/(2*pai);
+            phase.row(1) = arg(field_calcu.Exyz.row(2).array())*360/(2*pai);
+
+            Matrix<double,5,Dynamic> plot_data = Matrix<double,5,Dynamic>::Zero(5,ref.n_sample);
+            plot_data.row(0) = power_db.row(0);
+            plot_data.row(1) = power_db.row(1);
+            plot_data.row(2) = power_db.row(2);
+            plot_data.row(3) = phase.row(0);
+            plot_data.row(4) = phase.row(1);
+            
+            std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
+            std::replace(title.begin(),title.end(),'_','-');
+            std::vector<std::string> graph_info{title,"sample points","relative mag[dB]","phase[{/Symbol \260}]"};
+            std::vector<int> axis{1,1,1,2,2};
+
+            plot_field_twoaxis(val_x,plot_data,axis,key_info,graph_info);
+            std::cout << "======= calcu error between two field end ========" << std::endl;
         }
         return 0;
     }
@@ -406,78 +476,137 @@ namespace calcu_field{
 
         std::cout << "========= info debug =========" << std::endl;
         far_ref.calcu_polar();
-        std::cout << "far_Rpolar = \n" << far_ref.Rpolar << std::endl;
+        // std::cout << "far_Rpolar = \n" << far_ref.Rpolar << std::endl;
         std::cout << "far_Epolar = \n" << far_ref.Epolar << std::endl;
         near_ref.calcu_polar();
-        std::cout << "near_ref_Rpolar = \n" << near_ref.Rpolar << std::endl;
+        // std::cout << "near_ref_Rpolar = \n" << near_ref.Rpolar << std::endl;
         std::cout << "near_ref_Epolar = \n" << near_ref.Epolar << std::endl;
         fardata.calcu_polar();
-        std::cout << "fardata_Rpolar = \n" << fardata.Rpolar << std::endl;
+        // std::cout << "fardata_Rpolar = \n" << fardata.Rpolar << std::endl;
         std::cout << "fardata_Epolar = \n" << fardata.Epolar << std::endl;
         std::cout << "========= end info debug =========" << std::endl;
         return 0;
     }
 
-    int calcu::plot_field(const MatrixXd& plot_field){
-        std::cout << plot_field.transpose() << std::endl;
-        // std::cout << plot_field.row(0).maxCoeff() << std::endl;
-
-        std::vector<std::vector<double>> vec_y;
-        // int size_col = std::min((int)plot_field.cols(), 200);
-        int size_col = (int)plot_field.cols();
-        std::cout << "size = " << size_col << std::endl;
-        std::vector<double> x(size_col);
-        double val_max = plot_field.row(0).maxCoeff();
-
-        for(int i = 0 ; i < plot_field.rows() ; i++){
-            // double val_max = plot_field.row(i).maxCoeff();
-            std::cout << "val_max = " << val_max << std::endl;
-            std::vector<double> y(size_col);
-            for(int j = 0 ; j < size_col ; j++){
-                y[j] = 20*std::log10(plot_field(i,j) / val_max);
-            }
-            vec_y.push_back(y);
-            for(auto index : y){
-                std::cout << index << " " ;
-            }
-            std::cout << std::endl;
+// plot data by gnuplot
+    int calcu::plot_field(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<std::string> key_info, std::vector<std::string> graph_info){
+        std::cout << val_y.transpose() << std::endl;
+        if(val_x.cols() != val_y.cols()){
+            ERR("error : plot data should have the same cols");
         }
-        for(int i = 0 ; i < x.size() ; i++){
-            x[i] = i;
+
+        if(graph_info.size() == 0){
+            graph_info.resize(4);
+            graph_info[0] = "sample title";
+            graph_info[1] = "xlabel";
+            graph_info[2] = "y1label";
+            graph_info[3] = "y2label";
+        }
+        if(key_info.size() == 0 ){
+            key_info.resize(val_y.size());
+            key_info[0] = "ref";
+            for(int i = 1 ; i < key_info.size() ; i++){
+                key_info[i] = "data" + std::to_string(i);
+            }
         }
 
 //  make datafile for gnuplot
         FILE* dataf;
         const char* filename = "datafile";
         dataf = fopen(filename,"w");
-        for(int i = 0 ; i < vec_y[0].size() ; i++){
-            fprintf(dataf,"%f ",x[i]);
-            for(int j = 0 ; j < vec_y.size() ; j++){
-                fprintf(dataf,"%f ",vec_y[j][i]);
+        for(int i = 0 ; i < val_y.cols() ; i++){
+            fprintf(dataf,"%f ",val_x(i));
+            for(int j = 0 ; j < val_y.rows() ; j++){
+                fprintf(dataf,"%f ",val_y(j,i));
             }
             fprintf(dataf,"\n");
         }
         fclose(dataf);
-// gnuplot make graph
-        std::stringstream cmd;
-        cmd << "plot ";
-        for(int i = 0 ; i < vec_y.size() ; i++){
-            if(i == 0){
-                cmd << "\"" << filename << "\" using 1:2 with linespoints title \"ref\"";
-            }else{
-                cmd << ", \"" << filename << "\" using 1:"<< i+2 << " with linespoints title \"data" << i << "\"";
-            }
-        }
 
+// gnuplot make graph
         FILE* gp;
         gp = popen("gnuplot -persist","w");
         fprintf(gp,"set grid \n");
-        fprintf(gp,"set xlabel \"sample points\"\n");
-        fprintf(gp,"set ylabel \"gain[dB]\"\n");
-        fprintf(gp,"%s\n",cmd.str().c_str());
+        fprintf(gp,"set title \"%s\"\n", graph_info[0].c_str());
+        fprintf(gp,"set xlabel \"%s\"\n",graph_info[1].c_str());
+        fprintf(gp,"set ylabel \"%s\"\n",graph_info[2].c_str());
+        fprintf(gp,"set y2label \"%s\"\n",graph_info[3].c_str());
+        // fprintf(gp,"%s\n",cmd.str().c_str());
+
+        for(int i = 0 ; i < val_y.rows() ; i++){
+            if(i == 0){
+                fprintf(gp,"plot \"%s\" using 1:2 with linespoints title \"%s\"\n",filename,key_info[0].c_str());
+            }else{
+                fprintf(gp,"replot \"%s\" using 1:%d with linespoints title \"%s\"\n",filename,i+2,key_info[i].c_str());
+            }
+        }
         pclose(gp);
 
-        std::cout << cmd.str() << std::endl;
+        // std::cout << cmd.str() << std::endl;
+        std::cout << "finish gnuplot" << std::endl;
+        return 0;
+    }
+
+    int calcu::plot_field_twoaxis(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<int> axis, std::vector<std::string> key_info, std::vector<std::string> graph_info){
+        // std::cout << val_y.transpose() << std::endl;
+        if(val_x.cols() != val_y.cols() || val_y.rows() != axis.size()){
+            ERR("error : plot data should have the same cols");
+        }
+        // error 処理　axis,keyinfo,graphinfo size
+        
+        if(graph_info.size() == 0){
+            graph_info.resize(4);
+            graph_info[0] = "sample title";
+            graph_info[1] = "xlabel";
+            graph_info[2] = "y1label";
+            graph_info[3] = "y2label";
+        }
+        if(key_info.size() == 0 ){
+            key_info.resize(val_y.size());
+            key_info[0] = "ref";
+            for(int i = 1 ; i < key_info.size() ; i++){
+                key_info[i] = "data" + std::to_string(i);
+            }
+        }
+
+    //  make datafile for gnuplot
+        FILE* dataf;
+        const char* filename = "datafile";
+        dataf = fopen(filename,"w");
+        for(int i = 0 ; i < val_y.cols() ; i++){
+            fprintf(dataf,"%f ",val_x(i));
+            for(int j = 0 ; j < val_y.rows() ; j++){
+                fprintf(dataf,"%f ",val_y(j,i));
+            }
+            fprintf(dataf,"\n");
+        }
+        fclose(dataf);
+
+    // gnuplot make graph
+        FILE* gp;
+        gp = popen("gnuplot -persist","w");
+        fprintf(gp,"set grid \n");
+        fprintf(gp,"set title \"%s\"\n", graph_info[0].c_str());
+        fprintf(gp,"set xlabel \"%s\"\n",graph_info[1].c_str());
+        fprintf(gp,"set ylabel \"%s\"\n",graph_info[2].c_str());
+        fprintf(gp,"set y2label \"%s\"\n",graph_info[3].c_str());
+        fprintf(gp,"set y2tics\n");
+
+        for(int i = 0 ; i < val_y.rows() ; i++){
+            int y_axis = axis[i];
+            if(y_axis != 1 && y_axis != 2){
+                ERR("gnuplot error: axis should be 1 or 2");
+            }
+
+            if(i == 0){
+                fprintf(gp,"plot \"%s\" using 1:2 axis x1y%d with linespoints title \"%s\"\n",filename,y_axis,key_info[0].c_str());
+            }else{
+                fprintf(gp,"replot \"%s\" using 1:%d axis x1y%d with linespoints title \"%s\"\n",filename,i+2,y_axis,key_info[i].c_str());
+            }
+        }
+        pclose(gp);
+
+        // std::cout << cmd.str() << std::endl;
         std::cout << "finish gnuplot" << std::endl;
         return 0;
     }

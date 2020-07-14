@@ -8,7 +8,7 @@
 using namespace Eigen;
 
 typedef Matrix<std::complex<double>,Dynamic,Dynamic> Mat_XC;
-typedef std::complex<double> Complexd;
+
 
 namespace data_field{
     class field{
@@ -28,8 +28,11 @@ namespace data_field{
         // Circuit *GetDuplicate(std::string input_prefix, std::string output_prefix, std::string internal_prefix);
 
     public:
-        double z;
+        std::string antenna_name;
+        double antenna_size;
+        int surface_type; //surface type is not used yet
         int n_sample;
+        double space;
         double freq;
         Matrix<double,3,Dynamic> Rxyz;
         Matrix<Complexd,3,Dynamic> Exyz;
@@ -40,6 +43,7 @@ namespace data_field{
         int calcu_polar();
         int calcu_cart();
         int copy_data(const field& in_field);
+        int print_info();
     };
 }
 
