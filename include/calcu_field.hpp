@@ -43,7 +43,7 @@ namespace calcu_field{
         data_field::field fardata;
         data_field::field far_ref;
 
-        int start_calcu();
+        int start_calcu(int val_L = 0);
         int set_matrix(Mat_XC& mat_cup,const Matrix<double,3,Dynamic>& Rxyz); //set matrix A and other value (P,k_0 ...etc)
         int calcu_ansbySVD();
         int calcu_fardata(data_field::field& field_calcu,const data_field::field& ref);

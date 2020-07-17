@@ -14,24 +14,32 @@
 
 int main(int argc, char** argv){
 
-    std::cout << "argc=" << argc << std::endl;
-    if(argc != 3){
-        ERR("error (./field_trans nearfield.txt farfield.txt)");
-    }
-
     std::string file_near_ref;
     std::string file_far_ref;
+    int val_L = 0;
 
-    std::cout.precision(15);
+    if(argc == 3){
+        file_near_ref = argv[1];
+        file_far_ref = argv[2];
+    }else if(argc == 4){
+        val_L = std::stoi(argv[1]);
+        file_near_ref = argv[2];
+        file_far_ref = argv[3];
+    }else{
+        ERR("error (./field_trans (int)L nearfield.txt farfield.txt)");
+    }
 
-    file_near_ref = argv[1];
-    file_far_ref = argv[2];
+    std::cout << "val_L = " << val_L << std::endl;
+
+
+    std::cout.precision(10);
+
 
     calcu_field::calcu calcu1;
     calcu1.near_ref.read_file(file_near_ref);
     calcu1.far_ref.read_file(file_far_ref);
     // calcu1.near_ref.print_info();
-    calcu1.start_calcu();
+    calcu1.start_calcu(val_L);
     calcu1.set_matrix(calcu1.A,calcu1.near_ref.Rxyz);
     // calcu1.calcu_ansbySVD();
     calcu1.calcu_ansbyEigen();
@@ -67,8 +75,8 @@ int main(int argc, char** argv){
     // std::cout << mat.array().log10() <<std::endl;
     // std::cout << mat.topRows(2) << std::endl;
 
-    Complexd temp(-2,-1e-10);
-    std::cout << c_check(temp) <<std::endl;
+    // Complexd temp(-2,-1e-10);
+    // std::cout << c_check(temp) <<std::endl;
 
     return 0;
 }

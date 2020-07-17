@@ -3,15 +3,19 @@
 #include "global.hpp"
 
 namespace calcu_field{
-    int calcu::start_calcu(){
+    int calcu::start_calcu(int val_L){
         // define constant value
         k_0 = 2*pai*freq*std::sqrt(myu*eps);
         int d_0 = 6;
         double d = near_ref.antenna_size;
-        L = (int) k_0*d + 1.8*std::pow(d_0,(double)2/3)*std::pow(k_0*d,(double(1/3)));
-        std::cout << "L = " << L << std::endl;
-        L = 30;
-        std::cout << "L = " << L << std::endl;
+        if(val_L == 0){
+            L = (int) k_0*d + 1.8*std::pow(d_0,(double)2/3)*std::pow(k_0*d,(double(1/3)));
+            std::cout << "L = " << L << std::endl;
+        }else{
+            L = val_L;
+            std::cout << "L = " << L << std::endl;
+        }
+
         P_theata = L;
         // P_phai = 2*L + 1;
         P_phai = 2*L - 1;
@@ -41,6 +45,7 @@ namespace calcu_field{
         // make wavenumber vec_k
         double delta_theata = pai/(P_theata - 1);
         double delta_phai = 2*pai/(P_phai -1);
+        // 長方形分割
         // for(int n_theata = 1 ; n_theata <= P_theata ; n_theata++){
         //     for(int n_phai = 1 ; n_phai <= P_phai ; n_phai++){
         //         Matrix<double,3,1> k;
@@ -77,16 +82,16 @@ namespace calcu_field{
 
                 if(n_theata == 0 || n_theata == P_theata -1){
                     if(n_phai == 0 || n_phai == P_phai -1){
-                        // weight.push_back(delta_phai * delta_theata / 4);
-                        weight.push_back(delta_phai * delta_theata );
+                        weight.push_back(delta_phai * delta_theata / 4);
+                        // weight.push_back(delta_phai * delta_theata );
                     }else{
-                        // weight.push_back(delta_phai * delta_theata / 2);
-                        weight.push_back(delta_phai * delta_theata );
+                        weight.push_back(delta_phai * delta_theata / 2);
+                        // weight.push_back(delta_phai * delta_theata );
                     }
                 }else{
                     if(n_phai == 0 || n_phai == P_phai -1){
-                        // weight.push_back(delta_phai * delta_theata / 2);
-                        weight.push_back(delta_phai * delta_theata );
+                        weight.push_back(delta_phai * delta_theata / 2);
+                        // weight.push_back(delta_phai * delta_theata );
                     }else{
                         weight.push_back(delta_phai * delta_theata );
                     }
