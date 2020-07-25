@@ -82,16 +82,16 @@ namespace calcu_field{
 
                 if(n_theata == 0 || n_theata == P_theata -1){
                     if(n_phai == 0 || n_phai == P_phai -1){
-                        weight.push_back(delta_phai * delta_theata / 4);
-                        // weight.push_back(delta_phai * delta_theata );
+                        // weight.push_back(delta_phai * delta_theata / 4);
+                        weight.push_back(delta_phai * delta_theata );
                     }else{
-                        weight.push_back(delta_phai * delta_theata / 2);
-                        // weight.push_back(delta_phai * delta_theata );
+                        // weight.push_back(delta_phai * delta_theata / 2);
+                        weight.push_back(delta_phai * delta_theata );
                     }
                 }else{
                     if(n_phai == 0 || n_phai == P_phai -1){
-                        weight.push_back(delta_phai * delta_theata / 2);
-                        // weight.push_back(delta_phai * delta_theata );
+                        // weight.push_back(delta_phai * delta_theata / 2);
+                        weight.push_back(delta_phai * delta_theata );
                     }else{
                         weight.push_back(delta_phai * delta_theata );
                     }
@@ -162,16 +162,18 @@ namespace calcu_field{
         // std:: cout << "k*r_R = " << k_0*r_R.norm() <<std::endl;
         // std::cout << "k.normalized =\n" <<k.normalized() << std::endl;
         // std::cout << "r_R.norm = " << r_R.norm() << std::endl;
-        for(int i = 0 ; i < L+1 ; i++){
-            // std::cout << "!!!!!!!!!!!!" << i << "!!!!!!!!!!!" << std::endl;
-            // std::cout << "k = \n" << k << std::endl;
-            // std::cout << "k.norm = " << k.norm() <<std::endl;
-            // std::cout << "r_R.normalized = \n" << r_R.normalized() << std::endl;
-            // std::cout << "k.norm = " << r_R.normalized().norm() <<std::endl;
-            // std::cout << "dot = " << k.dot(r_R.normalized()) << std::endl;
-            // std::cout << "legendre = " << std::legendre(i,k.normalized().dot(r_R.normalized())) <<std::endl;
-            // std::cout << "hankel_2 = " << sph_hankel_2(i,k_0*r_R.norm()) <<std::endl;
-            result += std::pow(Complexd(0,-1),i) * (double)(2*i+1) * std::legendre(i,k.normalized().dot(r_R.normalized())) * sph_hankel_2(i,k_0*r_R.norm());
+        for(int i = 0 ; i < L ; i++){
+            // std::cout << "i = " << i << std::endl;
+            // std::cout << k.normalized().dot(r_R.normalized()) << "(" << i << ") ";
+            double val_len = k.normalized().dot(r_R.normalized());
+            if(val_len > 1){
+                ERR("legendre function out of range val_len > 1");
+                val_len = 1;
+            }else if(val_len < -1){
+                ERR("legendre function out of range val_len < -1");
+                val_len = -1;
+            }
+            result += std::pow(Complexd(0,-1),i) * (double)(2*i+1) * (Complexd) std::legendre(i,val_len) * sph_hankel_2(i,k_0*r_R.norm());
         }
         result = result * coeff_T;
         // std::cout << "result = " << result <<std::endl;
@@ -272,11 +274,16 @@ namespace calcu_field{
 
 // calcu fardata from ans (U_mea = A*ans) angle by r_m
     int calcu::calcu_fardata(data_field::field& field_calcu,const data_field::field& ref){
+        std::cout << "#calcu_fardata" << std::endl;
         field_calcu.copy_data(ref);
         field_calcu.calcu_polar();//ここは修正　Epolarを計算する必要なし
 
         Mat_XC A_far;
         set_matrix(A_far,field_calcu.Rxyz);
+        // if(A_far == A){
+        //     std::cout << "///// Afar = A ////\n" <<std::endl;
+        // }
+        std::cout << "finish far set matrix" << std::endl;
         Mat_XC U_far = A_far * ans;
 
         // // 各r_iに対して計算 T*Dj
@@ -379,6 +386,7 @@ namespace calcu_field{
         Mat_XC A_far;
         field_calcu.copy_data(ref);
         set_matrix(A_far , field_calcu.Rxyz);
+
         Mat_XC result = MatrixXd::Zero(ref.n_sample,1);
         result = A_far * ans;
         std::cout << "fardata_U.cols() = " << result.cols() << std::endl;

@@ -31,7 +31,6 @@ int main(int argc, char** argv){
 
     std::cout << "val_L = " << val_L << std::endl;
 
-
     std::cout.precision(10);
 
 

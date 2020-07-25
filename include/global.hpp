@@ -14,7 +14,6 @@
 
 #include <iostream>
 #include <fstream>
-
 #include <unistd.h>
 
 typedef std::complex<double> Complexd;
