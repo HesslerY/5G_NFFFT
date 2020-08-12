@@ -30,9 +30,7 @@ int main(int argc, char** argv){
     }
 
     std::cout << "val_L = " << val_L << std::endl;
-
     std::cout.precision(10);
-
 
     calcu_field::calcu calcu1;
     calcu1.near_ref.read_file(file_near_ref);
@@ -47,12 +45,16 @@ int main(int argc, char** argv){
     // calcu1.calcu_fardata3(calcu1.fardata,calcu1.far_ref);
     // calcu1.calcu_fardata_U(calcu1.fardata,calcu1.far_ref);
 
-    calcu1.print_info();
+    // calcu1.print_info();
     std::string title = file_near_ref + " to " + file_far_ref;
     calcu1.calcu_error(calcu1.fardata,calcu1.far_ref,title);
     // calcu1.calcu_phase(calcu1.fardata,calcu1.far_ref);
 
     std::cout << "finish all calculation" << std::endl;
+    calcu1.savetxt_csv(calcu1.A,"data_A",true);
+    calcu1.savetxt_csv(calcu1.U_mea,"data_Umea",true);
+    calcu1.savetxt_csv(calcu1.ans,"data_ans",true);
+
 
 
     // ルジャンドル*ハンケル
@@ -69,6 +71,7 @@ int main(int argc, char** argv){
 
     // MatrixXd mat(2,2);
     // mat << 1 ,3 ,4 ,5;
+
     // // std::cout << mat.norm() << std::endl;
     // std::cout << mat.rowwise().norm() << std::endl;
     // std::cout << mat.array().log10() <<std::endl;

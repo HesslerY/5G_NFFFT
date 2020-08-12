@@ -57,7 +57,7 @@ namespace calcu_field{
         std::vector<std::string> key_info = std::vector<std::string>(),std::vector<std::string> graph_info = std::vector<std::string>() );//plot x y and graph title by gnuplot
         int plot_field_twoaxis(const MatrixXd&,const MatrixXd&,std::vector<int>,
         std::vector<std::string> key_info = std::vector<std::string>(),std::vector<std::string>graph_info = std::vector<std::string>() );//plot x y and graph title by gnuplot
-
+        int savetxt_csv(Mat_XC data, std::string filename, bool cflag);
 
         Complexd calcu_T(Matrix<double,3,1> , Matrix<double,3,1>);
         Complexd provepattern_theata(Matrix<double,3,1> , int);

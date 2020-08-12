@@ -429,6 +429,7 @@ namespace calcu_field{
             for(int i = 0 ; i < ref.n_sample ; i++){
                 val_x(i) = i;
             }
+            
             mat_power.row(0) = ref.Exyz.colwise().norm();
             mat_power.row(1) = field_calcu.Exyz.colwise().norm();
             Matrix<double,3,Dynamic> power_db = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
@@ -621,6 +622,33 @@ namespace calcu_field{
 
         // std::cout << cmd.str() << std::endl;
         std::cout << "finish gnuplot" << std::endl;
+        return 0;
+    }
+
+    int calcu::savetxt_csv(Mat_XC data, std::string filename, bool cflag){
+
+        std::ofstream of_real(filename + "_real.csv");
+        of_real.precision(10);
+
+        for(int i = 0 ; i < data.rows() ; i++){
+            of_real << data(i,0).real();
+            for(int j = 1; j < data.cols() ; j++){
+                of_real <<"," << data(i,j).real();
+            }
+            of_real << std::endl;
+        }
+
+        if(cflag){
+            std::ofstream of_img(filename + "_img.csv");
+            of_img.precision(10);
+            for(int i = 0 ; i < data.rows() ; i++){
+                of_img << data(i,0).imag();
+                for(int j = 1; j < data.cols() ; j++){
+                    of_img << "," << data(i,j).imag();
+                }
+                of_img << std::endl;
+            }
+        }
         return 0;
     }
 }
