@@ -82,16 +82,16 @@ namespace calcu_field{
 
                 if(n_theata == 0 || n_theata == P_theata -1){
                     if(n_phai == 0 || n_phai == P_phai -1){
-                        // weight.push_back(delta_phai * delta_theata / 4);
-                        weight.push_back(delta_phai * delta_theata );
+                        weight.push_back(delta_phai * delta_theata / 4);
+                        // weight.push_back(delta_phai * delta_theata );
                     }else{
-                        // weight.push_back(delta_phai * delta_theata / 2);
-                        weight.push_back(delta_phai * delta_theata );
+                        weight.push_back(delta_phai * delta_theata / 2);
+                        // weight.push_back(delta_phai * delta_theata );
                     }
                 }else{
                     if(n_phai == 0 || n_phai == P_phai -1){
-                        // weight.push_back(delta_phai * delta_theata / 2);
-                        weight.push_back(delta_phai * delta_theata );
+                        weight.push_back(delta_phai * delta_theata / 2);
+                        // weight.push_back(delta_phai * delta_theata );
                     }else{
                         weight.push_back(delta_phai * delta_theata );
                     }

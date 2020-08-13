@@ -50,10 +50,10 @@ int main(int argc, char** argv){
     calcu1.calcu_error(calcu1.fardata,calcu1.far_ref,title);
     // calcu1.calcu_phase(calcu1.fardata,calcu1.far_ref);
 
-    std::cout << "finish all calculation" << std::endl;
-    calcu1.savetxt_csv(calcu1.A,"data_A",true);
-    calcu1.savetxt_csv(calcu1.U_mea,"data_Umea",true);
-    calcu1.savetxt_csv(calcu1.ans,"data_ans",true);
+    // std::cout << "finish all calculation" << std::endl;
+    // calcu1.savetxt_csv(calcu1.A,"data_A",true);
+    // calcu1.savetxt_csv(calcu1.U_mea,"data_Umea",true);
+    // calcu1.savetxt_csv(calcu1.ans,"data_ans",true);
 
 
 
