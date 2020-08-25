@@ -13,7 +13,7 @@ namespace calcu_field{
         static constexpr double myu = 1.256637062121e-6; //myu_0 [N A^(-2)]
         static constexpr double eps = 8.854187812813e-12; // eps_0 [F m^(-1)]
         static constexpr double freq = 27e9;// 27Ghz;
-        static constexpr double accur_SVD = 1;// singular value less than this is set to be 0 
+        static constexpr double accur_SVD = 300;// singular value less than this is set to be 0 
 
     private:
         int L;

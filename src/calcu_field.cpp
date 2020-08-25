@@ -16,7 +16,7 @@ namespace calcu_field{
             std::cout << "L = " << L << std::endl;
         }
 
-        P_theata = L;
+        P_theata = L;//分点数θ
         // P_phai = 2*L + 1;
         P_phai = 2*L - 1;
         P = P_theata * P_phai; //分点数
@@ -45,23 +45,6 @@ namespace calcu_field{
         // make wavenumber vec_k
         double delta_theata = pai/(P_theata - 1);
         double delta_phai = 2*pai/(P_phai -1);
-        // 長方形分割
-        // for(int n_theata = 1 ; n_theata <= P_theata ; n_theata++){
-        //     for(int n_phai = 1 ; n_phai <= P_phai ; n_phai++){
-        //         Matrix<double,3,1> k;
-        //         Matrix<double,2,1> angle;
-        //         double theata = delta_theata*n_theata - delta_theata / 2;
-        //         double phai = delta_phai * n_phai - delta_phai / 2;
-        //         double x = std::sin(theata) * std::cos(phai);
-        //         double y = std::sin(theata) * std::sin(phai);
-        //         double z = std::cos(theata);
-        //         k << x,y,z;
-        //         angle << theata, phai;
-        //         vec_k.push_back(k);
-        //         vec_sin.push_back(std::sin(theata));
-        //         vec_k_angle.push_back(angle);
-        //     }
-        // }
 
         // 台形分割
         for(int n_theata = 0 ; n_theata < P_theata ; n_theata++){
@@ -96,6 +79,7 @@ namespace calcu_field{
                         weight.push_back(delta_phai * delta_theata );
                     }
                 }
+                // if(n_theata == 0) break;
             }
         }
 
@@ -128,7 +112,7 @@ namespace calcu_field{
                         // mat_cup(i,j) = weight[j]*temp_T*temp_W*vec_sin[j];
                         mat_cup(i,j) = 0;
                     }else{
-                        std::cout << "error index of mat_cup is wrong" << std::endl;
+                        ERR("error index of mat_cup is wrong");
                     }
                 }
 
@@ -144,7 +128,7 @@ namespace calcu_field{
                         std::complex<double> temp_W = provepattern_phai(vec_k[j-P],i - n_sample);
                         mat_cup(i,j) = weight[j-P]*temp_T*temp_W*vec_sin[j-P];
                     }else{
-                        std::cout << "error index of mat_cup is wrong" << std::endl;
+                        ERR("error index of mat_cup is wrong");
                     }
                }
             }
@@ -207,15 +191,15 @@ namespace calcu_field{
 
     // inverse singular value more than accur_SVD is set to be 0
         MatrixXd inv_sing_trun = SVD.singularValues().array().inverse().matrix();
-        std::cout << "inv_sing = \n" << inv_sing_trun << std::endl;
+        // std::cout << "inv_sing = \n" << inv_sing_trun << std::endl;
+        double min = inv_sing_trun.minCoeff();
         for(int i = 0 ; i < inv_sing_trun.size() ; i++){
-            // if(inv_sing_trun(i) >= accur_SVD){
+            if(inv_sing_trun(i) >= min * accur_SVD){
+                inv_sing_trun(i) = 0;
+            }
+            // if( i > 300){
             //     inv_sing_trun(i) = 0;
             // }
-            // if( i > 100){
-            //     inv_sing_trun(i) = 0;
-            // }
-            ;
         }
         std::cout << "inv_sing_trun = \n" << inv_sing_trun << std::endl;
 
@@ -285,33 +269,6 @@ namespace calcu_field{
         // }
         std::cout << "finish far set matrix" << std::endl;
         Mat_XC U_far = A_far * ans;
-
-        // // 各r_iに対して計算 T*Dj
-        // for(int i = 0 ; i < field_calcu.Rxyz.cols() ; i++){
-        //     Complexd E_theata = 0;
-        //     Complexd E_phai = 0;
-        //     for(int j = 0 ; j < A.cols() ; j++){
-        //         if (j < P){
-        //             E_theata += w_theata*w_phai*calcu_T(vec_k[j],field_calcu.Rxyz.col(i))*vec_sin[j]*ans(j);
-        //         }else if(j >= P){
-        //             E_phai += w_theata*w_phai*calcu_T(vec_k[j-P],field_calcu.Rxyz.col(i))*vec_sin[j-P]*ans(j);
-        //         }
-        //     }
-        //     // cos(theata) = z/r : tan(phai) = y/x
-        //     double r_theata = std::acos( field_calcu.Rxyz(2,i)/field_calcu.Rxyz.col(i).norm() );
-        //     double r_phai;
-        //     if(field_calcu.Rxyz(1,i) == 0 && field_calcu.Rxyz(0,i) == 0){
-        //         r_phai = 0;
-        //     }else{
-        //         r_phai = std::atan2(field_calcu.Rxyz(1,i) , field_calcu.Rxyz(0,i));
-        //     }
-
-        //     field_calcu.Exyz(0,i) = E_theata*std::cos(r_theata)*std::cos(r_phai) - E_phai*std::sin(r_phai);
-        //     field_calcu.Exyz(1,i) = E_theata*std::cos(r_theata)*std::sin(r_phai) + E_phai*std::cos(r_phai);
-        //     field_calcu.Exyz(2,i) = -E_theata*std::sin(r_theata);
-        //     // std::cout << "theata,phai = " << r_theata << " " << r_phai << std::endl;
-        //     std::cout << "E_theata,E_phai = " << E_theata << " " << E(i) << "," << E_phai << " " << E(i+field_calcu.n_sample) << std::endl;
-        // }
 
         for(int i= 0 ; i < field_calcu.Rxyz.cols() ; i++){
             field_calcu.Epolar(0,i) = 0;
@@ -440,8 +397,14 @@ namespace calcu_field{
             // power_db.row(2) = 20*(error.colwise().norm().array()*mat_power.row(0).array().inverse()).log10();
 
             MatrixXd phase = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
-            phase.row(0) = arg(ref.Exyz.row(2).array())*360/(2*pai);
-            phase.row(1) = arg(field_calcu.Exyz.row(2).array())*360/(2*pai);
+            Mat_XC data = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
+            data.row(0) = ref.Exyz.real().colwise().norm() + Complexd(0,1) * ref.Exyz.imag().colwise().norm();
+            data.row(1) = field_calcu.Exyz.real().colwise().norm() + Complexd(0,1) * field_calcu.Exyz.imag().colwise().norm();
+            std::cout << "data = \n" << data << std::endl;
+
+            phase.row(0) = arg(data.row(0).array())*360/(2*pai);
+            phase.row(1) = arg(data.row(1).array())*360/(2*pai);
+            std::cout << "phase =\n" << phase << std::endl;
 
             Matrix<double,5,Dynamic> plot_data = Matrix<double,5,Dynamic>::Zero(5,ref.n_sample);
             plot_data.row(0) = power_db.row(0);
@@ -528,6 +491,11 @@ namespace calcu_field{
         FILE* dataf;
         const char* filename = "datafile";
         dataf = fopen(filename,"w");
+        fprintf(dataf,"#x");
+        for(int i = 0; i < key_info.size(); i++){
+            fprintf(dataf," %s",key_info[i].c_str());
+        }
+        fprintf(dataf,"\n");
         for(int i = 0 ; i < val_y.cols() ; i++){
             fprintf(dataf,"%f ",val_x(i));
             for(int j = 0 ; j < val_y.rows() ; j++){
@@ -587,6 +555,12 @@ namespace calcu_field{
         FILE* dataf;
         const char* filename = "datafile";
         dataf = fopen(filename,"w");
+        fprintf(dataf,"# x");
+        for(int i = 0; i < key_info.size(); i++){
+            fprintf(dataf," %s",key_info[i].c_str());
+        }
+        fprintf(dataf,"\n");
+
         for(int i = 0 ; i < val_y.cols() ; i++){
             fprintf(dataf,"%f ",val_x(i));
             for(int j = 0 ; j < val_y.rows() ; j++){
@@ -626,7 +600,6 @@ namespace calcu_field{
     }
 
     int calcu::savetxt_csv(Mat_XC data, std::string filename, bool cflag){
-
         std::ofstream of_real(filename + "_real.csv");
         of_real.precision(10);
 
@@ -637,7 +610,6 @@ namespace calcu_field{
             }
             of_real << std::endl;
         }
-
         if(cflag){
             std::ofstream of_img(filename + "_img.csv");
             of_img.precision(10);
