@@ -1,9 +1,9 @@
 #include "data_field.hpp"
-#include "calcu_field.hpp"
+#include "fiafta.hpp"
 #include "global.hpp"
 
 namespace calcu_field{
-    int calcu::start_calcu(int val_L){
+    int fiafta::start_calcu(int val_L){
         // define constant value
         k_0 = 2*pai*freq*std::sqrt(myu*eps);
         int d_0 = 6;
@@ -91,7 +91,7 @@ namespace calcu_field{
     }
 
 // set coupling matrix mat_cup
-    int calcu::set_matrix(Mat_XC& mat_cup,const Matrix<double,3,Dynamic>& Rxyz){
+    int fiafta::set_matrix(Mat_XC& mat_cup,const Matrix<double,3,Dynamic>& Rxyz){
         std::cout << "#set matrix mat_cup" << std::endl;
         int n_sample = Rxyz.cols();
         mat_cup.resize(n_sample*2 , 2*P);
@@ -140,7 +140,7 @@ namespace calcu_field{
     }
 
 // args are not normalized
-    Complexd calcu::calcu_T(Matrix<double,3,1> k, Matrix<double,3,1> r_R){
+    Complexd fiafta::calcu_T(Matrix<double,3,1> k, Matrix<double,3,1> r_R){
         Complexd result = 0;
         Complexd coeff_T = Complexd(0,-1) * k_0 / (4*pai); //coff_T = -j*k_0/(4*pai)
         // std:: cout << "k*r_R = " << k_0*r_R.norm() <<std::endl;
@@ -165,7 +165,7 @@ namespace calcu_field{
         return result;
     }
     
-    int calcu::calcu_ansbySVD(){
+    int fiafta::calcu_ansbySVD(){
         std::cout << "========== SVD info ==============" << std::endl;
         std::cout << "this is calcu_ansbySVD" <<std::endl;
 
@@ -218,7 +218,7 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::calcu_ansbyEigen(){
+    int fiafta::calcu_ansbyEigen(){
         Mat_XC x;
     // ans by LU
         // FullPivLU<Mat_XC> lu(A);
@@ -249,15 +249,15 @@ namespace calcu_field{
 
 // calculation of prove pattern weight
 // ideal prove always 1 (for all direction)
-    Complexd calcu::provepattern_theata(Matrix<double,3,1> k , int index_row){
+    Complexd fiafta::provepattern_theata(Matrix<double,3,1> k , int index_row){
         return 1;
     }
-    Complexd calcu::provepattern_phai(Matrix<double,3,1> k , int index_row){
+    Complexd fiafta::provepattern_phai(Matrix<double,3,1> k , int index_row){
         return 1;
     }
 
 // calcu fardata from ans (U_mea = A*ans) angle by r_m
-    int calcu::calcu_fardata(data_field::field& field_calcu,const data_field::field& ref){
+    int fiafta::calcu_fardata(data_field::field& field_calcu,const data_field::field& ref){
         std::cout << "#calcu_fardata" << std::endl;
         field_calcu.copy_data(ref);
         field_calcu.calcu_polar();//ここは修正　Epolarを計算する必要なし
@@ -286,7 +286,7 @@ namespace calcu_field{
     }
 
 // calcu fardata from ans (U_mea = A*ans) angle by k
-    int calcu::calcu_fardata2(data_field::field& field_calcu,const data_field::field& ref){
+    int fiafta::calcu_fardata2(data_field::field& field_calcu,const data_field::field& ref){
         Mat_XC Epolar(3,ref.n_sample);//E_r , E_theata , E_phai @field_calcu
         field_calcu.copy_data(ref);
 
@@ -312,7 +312,7 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::calcu_fardata3(data_field::field& field_calcu,const data_field::field& ref){
+    int fiafta::calcu_fardata3(data_field::field& field_calcu,const data_field::field& ref){
         field_calcu.copy_data(ref);
 
         // Mat_XC temp = A * ans;
@@ -339,7 +339,7 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::calcu_fardata_U(data_field::field& field_calcu,const data_field::field& ref){
+    int fiafta::calcu_fardata_U(data_field::field& field_calcu,const data_field::field& ref){
         Mat_XC A_far;
         field_calcu.copy_data(ref);
         set_matrix(A_far , field_calcu.Rxyz);
@@ -352,7 +352,7 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::calcu_error(const data_field::field& field_calcu,const data_field::field& ref, std::string title = "title"){
+    int fiafta::calcu_error(const data_field::field& field_calcu,const data_field::field& ref, std::string title = "title"){
         std::cout << "======= calcu error between two field  ========" << std::endl;
         Matrix<Complexd,3,Dynamic> error = Matrix<double,3,Dynamic>::Zero(3,ref.n_sample);
 
@@ -425,7 +425,7 @@ namespace calcu_field{
     }
 
 // print info 
-    int calcu::print_info(){
+    int fiafta::print_info(){
         std::cout << "========= info calcu=========" << std::endl;
         std::cout << "sampling points = " << near_ref.n_sample << std::endl;
         std::cout << "freq = " << freq << std::endl;
@@ -466,7 +466,7 @@ namespace calcu_field{
     }
 
 // plot data by gnuplot
-    int calcu::plot_field(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<std::string> key_info, std::vector<std::string> graph_info){
+    int fiafta::plot_field(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<std::string> key_info, std::vector<std::string> graph_info){
         std::cout << val_y.transpose() << std::endl;
         if(val_x.cols() != val_y.cols()){
             ERR("error : plot data should have the same cols");
@@ -529,7 +529,7 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::plot_field_twoaxis(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<int> axis, std::vector<std::string> key_info, std::vector<std::string> graph_info){
+    int fiafta::plot_field_twoaxis(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<int> axis, std::vector<std::string> key_info, std::vector<std::string> graph_info){
         // std::cout << val_y.transpose() << std::endl;
         if(val_x.cols() != val_y.cols() || val_y.rows() != axis.size()){
             ERR("error : plot data should have the same cols");
@@ -599,7 +599,7 @@ namespace calcu_field{
         return 0;
     }
 
-    int calcu::savetxt_csv(Mat_XC data, std::string filename, bool cflag){
+    int fiafta::savetxt_csv(Mat_XC data, std::string filename, bool cflag){
         std::ofstream of_real(filename + "_real.csv");
         of_real.precision(10);
 

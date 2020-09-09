@@ -1,5 +1,5 @@
-#ifndef _CIRCUIT_H_INCLUDED
-#define _CIRCUIT_H_INCLUDED
+#ifndef _DATA_FIELD_HPP_INCLUDED
+#define _DATA_FIELD_HPP_INCLUDED
 
 #include "global.hpp"
 #include <Eigen/Dense>
@@ -36,7 +36,7 @@ namespace data_field{
         double freq;
         Matrix<double,3,Dynamic> Rxyz;
         Matrix<Complexd,3,Dynamic> Exyz;
-        Matrix<double,3,Dynamic> Rpolar;
+        Matrix<double,3,Dynamic> Rpolar; //(r,theta,phi)
         Matrix<Complexd,3,Dynamic> Epolar;
 
         int read_file(std::string);
