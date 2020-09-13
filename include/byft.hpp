@@ -2,6 +2,7 @@
 #define _BYFT_HPP_INCLUDED
 
 #include "data_field.hpp"
+#include "global.hpp"
 
 namespace calcu_field{
     class byft{

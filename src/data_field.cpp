@@ -1,7 +1,4 @@
 #include "data_field.hpp"
-#include "fiafta.hpp"
-#include "global.hpp"
-
 
 namespace data_field{
     int field::read_file(std::string filename){

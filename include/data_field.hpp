@@ -2,6 +2,7 @@
 #define _DATA_FIELD_HPP_INCLUDED
 
 #include "global.hpp"
+
 #include <Eigen/Dense>
 #include <cmath>
 

@@ -1,6 +1,10 @@
 #ifndef _FIAFTA_HPP_INCLUDED
 #define _FIAFTA_HPP_INCLUDED
 
+#include "global.hpp"
+#include "data_field.hpp"
+
+
 namespace calcu_field{
     class fiafta{
     public:
@@ -53,10 +57,6 @@ namespace calcu_field{
         int calcu_error(const data_field::field& field_calcu,const data_field::field& ref,std::string title);
         int calcu_ansbyEigen();
         int print_info();
-        int plot_field(const MatrixXd& val_x,const MatrixXd& val_y,
-        std::vector<std::string> key_info = std::vector<std::string>(),std::vector<std::string> graph_info = std::vector<std::string>() );//plot x y and graph title by gnuplot
-        int plot_field_twoaxis(const MatrixXd&,const MatrixXd&,std::vector<int>,
-        std::vector<std::string> key_info = std::vector<std::string>(),std::vector<std::string>graph_info = std::vector<std::string>() );//plot x y and graph title by gnuplot
         int savetxt_csv(Mat_XC data, std::string filename, bool cflag);
 
         Complexd calcu_T(Matrix<double,3,1> , Matrix<double,3,1>);

@@ -16,6 +16,10 @@
 #include <fstream>
 #include <unistd.h>
 
+#include <Eigen/Dense>
+using namespace Eigen;
+
+typedef Matrix<std::complex<double>,Dynamic,Dynamic> Mat_XC;
 typedef std::complex<double> Complexd;
 
 inline void ERR(std::string err_msg) {
@@ -49,6 +53,10 @@ inline Complexd c_check(Complexd val, double check_less = 1e-10){
     }
     return val;
 }
+
+int plot_field_twoaxis_global(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<int> axis, std::vector<std::string> key_info, std::vector<std::string> graph_info);
+int plot_field_global(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<std::string> key_info, std::vector<std::string> graph_info);
+
 
 #endif // _GLOBAL_H_INCLUDED
 
