@@ -18,8 +18,8 @@ int main(int argc, char** argv){
     std::string file_near_ref;
     std::string file_far_ref;
     
-    bool flag_fiafta = false;
-    bool flag_fourier = true;
+    bool flag_fiafta = true;
+    bool flag_fourier = false;
 
     if(flag_fiafta){
         int val_L = 0;
@@ -51,7 +51,9 @@ int main(int argc, char** argv){
 
         fiafta1.print_info();
         std::string title = file_near_ref + " to " + file_far_ref;
-        fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
+        // fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
+        fiafta1.make_graph_xcut();
+        fiafta1.make_graph_ycut();
 
         // std::cout << "finish all calculation" << std::endl;
         // fiafta1.savetxt_csv(fiafta1.A,"data_A",true);
@@ -60,7 +62,7 @@ int main(int argc, char** argv){
     }
     if(flag_fourier){
         if(argc != 3){
-            ERR("error ./field_trans nearfield.txt");
+            ERR("error ./field_trans nearfield.txt farfield.txt");
         }
         file_near_ref = argv[1];
         file_far_ref = argv[2];
@@ -68,7 +70,8 @@ int main(int argc, char** argv){
         calcu_field::byft sample;
         sample.near_ref.read_file(file_near_ref);
         sample.far_ref.read_file(file_far_ref);
-        sample.calcu_pws();
+        std::string title = file_near_ref + " to " + file_far_ref;
+        sample.calcu_pws(title);
     }
 
 

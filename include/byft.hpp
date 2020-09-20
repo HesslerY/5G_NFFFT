@@ -22,7 +22,7 @@ namespace calcu_field{
         Mat_XC A_pws;
 
         public:
-        int calcu_pws();
+        int calcu_pws(std::string title);
     };
 }
 

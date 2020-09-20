@@ -38,7 +38,7 @@ namespace data_field{
         Matrix<double,3,Dynamic> Rxyz;
         Matrix<Complexd,3,Dynamic> Exyz;
         Matrix<double,3,Dynamic> Rpolar; //(r,theta,phi)
-        Matrix<Complexd,3,Dynamic> Epolar;
+        Matrix<Complexd,3,Dynamic> Epolar; //(Er,Etheta,Ephi)
 
         int read_file(std::string);
         int calcu_polar();

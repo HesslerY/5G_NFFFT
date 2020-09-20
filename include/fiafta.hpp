@@ -56,6 +56,8 @@ namespace calcu_field{
         int calcu_fardata_U(data_field::field& field_calcu,const data_field::field& ref);
         int calcu_error(const data_field::field& field_calcu,const data_field::field& ref,std::string title);
         int calcu_ansbyEigen();
+        int make_graph_xcut();
+        int make_graph_ycut();
         int print_info();
         int savetxt_csv(Mat_XC data, std::string filename, bool cflag);
 

@@ -423,6 +423,61 @@ namespace calcu_field{
         return 0;
     }
 
+    int fiafta::make_graph_xcut(){
+        std::cout << "this is make grapah function" << std::endl;
+        int n_point = (int)std::sqrt(fardata.n_sample);
+        std::cout << "n_point = " << n_point << std::endl;
+
+        MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
+        double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
+        alldata_db.row(0) = far_ref.Exyz.colwise().norm() / maxE;
+        alldata_db.row(1) = fardata.Exyz.colwise().norm() / maxE;
+        
+        MatrixXd data = Matrix<double,2,Dynamic>::Zero(2,n_point);
+        Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,n_point);
+
+        for(int i = 0 ; i < n_point ; i++){
+            data(0,i) = alldata_db(0,n_point*i + n_point/2 - 1);
+            data(1,i) = alldata_db(1,n_point*i + n_point/2 - 1);
+            val_x(0,i) = fardata.Rxyz(0,n_point*i + n_point/2 - 1); // plot by x 
+        }
+
+        std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
+        std::string title = "sample title xcut";
+        std::vector<std::string> graph_info{title,"x[m]","relative mag[dB]","phase[{/Symbol \260}]"};
+        plot_field_global(val_x,data,key_info,graph_info);
+        return 0;
+    }
+
+    int fiafta::make_graph_ycut(){
+        std::cout << "this is make grapah function" << std::endl;
+        int n_point = (int)std::sqrt(fardata.n_sample);
+        std::cout << "n_point = " << n_point << std::endl;
+
+        MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
+        double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
+        alldata_db.row(0) = far_ref.Exyz.colwise().norm() / maxE;
+        alldata_db.row(1) = fardata.Exyz.colwise().norm() / maxE;
+        
+        MatrixXd data = Matrix<double,2,Dynamic>::Zero(2,n_point);
+        Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,n_point);
+
+        std::cout << "y cut = \n" << fardata.Rxyz.block(0,n_point*(n_point/2 - 1),3,n_point) << std::endl;
+
+        for(int i = 0 ; i < n_point ; i++){
+            data(0,i) = alldata_db(0,n_point*(n_point/2 - 1) + i);
+            data(1,i) = alldata_db(1,n_point*(n_point/2 - 1) + i);
+            val_x(0,i) = fardata.Rxyz(1,n_point*(n_point/2 - 1) + i); // plot by y
+        }
+
+        std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
+        std::string title = "sample title ycut";
+        std::vector<std::string> graph_info{title,"y[m]","relative mag[dB]","phase[{/Symbol \260}]"};
+        plot_field_global(val_x,data,key_info,graph_info);
+        return 0;
+    }
+
+
 // print info 
     int fiafta::print_info(){
         std::cout << "========= info calcu=========" << std::endl;

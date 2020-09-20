@@ -1,7 +1,7 @@
 #include "byft.hpp"
 
 namespace calcu_field{
-    int byft::calcu_pws(){
+    int byft::calcu_pws(std::string title){
         std::cout << "this is calcu_pws" << std::endl;
         near_ref.calcu_polar();
         far_ref.calcu_polar();
@@ -49,16 +49,17 @@ namespace calcu_field{
         Matrix<double,3,Dynamic> power_db = Matrix<double,3,Dynamic>::Zero(3,far_ref.n_sample);
         double max_power = mat_power.row(0).maxCoeff();
 
-        power_db.topRows(2) = 20*(mat_power.array() / max_power).log10();
-        // power_db.row(0) = 20*(mat_power.row(0).array() / mat_power.row(0).maxCoeff()).log10();
-        // power_db.row(1) = 20*(mat_power.row(1).array() / mat_power.row(1).maxCoeff()).log10();
+        // power_db.topRows(2) = 20*(mat_power.array() / max_power).log10();
+        power_db.row(0) = 20*(mat_power.row(0).array() / mat_power.row(0).maxCoeff()).log10();
+        power_db.row(1) = 20*(mat_power.row(1).array() / mat_power.row(1).maxCoeff()).log10();
 
         // power_db.row(2) = 20*(abs(mat_power.row(0).array() - mat_power.row(1).array())/max_power).log10();
         power_db.row(2) = 20*(abs(mat_power.row(0).array() - mat_power.row(1).array())*mat_power.row(0).array().inverse()).log10();
         // power_db.row(2) = 20*(error.colwise().norm().array()*mat_power.row(0).array().inverse()).log10();
 
         std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}"};
-        std::string title = "NFFFT by fourier transform";
+        std::replace(title.begin(),title.end(),'_','-');
+        title = "NFFFT by FT (" + title + ")";
         std::vector<std::string> graph_info{title,"sample points","relative mag[dB]",""};
 
         plot_field_global(val_x,power_db,key_info,graph_info);
