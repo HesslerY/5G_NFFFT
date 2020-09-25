@@ -1,10 +1,12 @@
 #include "fiafta.hpp"
 
-
 namespace calcu_field{
     int fiafta::start_calcu(int val_L){
         // define constant value
+        freq = near_ref.freq;
+        std::cout << "freq = " << freq << std::endl;
         k_0 = 2*pai*freq*std::sqrt(myu*eps);
+        std::cout << "k_0 = " << k_0 << std::endl;
         int d_0 = 6;
         double d = near_ref.antenna_size;
         if(val_L == 0){
@@ -423,15 +425,16 @@ namespace calcu_field{
         return 0;
     }
 
-    int fiafta::make_graph_xcut(){
+    int fiafta::make_graph_xcut(std::string title){
         std::cout << "this is make grapah function" << std::endl;
         int n_point = (int)std::sqrt(fardata.n_sample);
         std::cout << "n_point = " << n_point << std::endl;
 
         MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
         double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
-        alldata_db.row(0) = far_ref.Exyz.colwise().norm() / maxE;
-        alldata_db.row(1) = fardata.Exyz.colwise().norm() / maxE;
+        alldata_db.row(0) = (far_ref.Exyz.colwise().norm() / maxE).array().log10()*20;
+        // alldata_db.row(1) = (fardata.Exyz.colwise().norm() / maxE).array().log10()*20;
+        alldata_db.row(1) = (fardata.Exyz.colwise().norm() / fardata.Exyz.colwise().norm().maxCoeff()).array().log10()*20;
         
         MatrixXd data = Matrix<double,2,Dynamic>::Zero(2,n_point);
         Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,n_point);
@@ -439,30 +442,30 @@ namespace calcu_field{
         for(int i = 0 ; i < n_point ; i++){
             data(0,i) = alldata_db(0,n_point*i + n_point/2 - 1);
             data(1,i) = alldata_db(1,n_point*i + n_point/2 - 1);
-            val_x(0,i) = fardata.Rxyz(0,n_point*i + n_point/2 - 1); // plot by x 
+            val_x(0,i) = fardata.Rxyz(0,n_point*i + n_point/2 - 1); // plot by x
         }
 
         std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
-        std::string title = "sample title xcut";
+        std::replace(title.begin(),title.end(),'_','-');
+        title += " (x cut)";
         std::vector<std::string> graph_info{title,"x[m]","relative mag[dB]","phase[{/Symbol \260}]"};
         plot_field_global(val_x,data,key_info,graph_info);
         return 0;
     }
 
-    int fiafta::make_graph_ycut(){
+    int fiafta::make_graph_ycut(std::string title){
         std::cout << "this is make grapah function" << std::endl;
         int n_point = (int)std::sqrt(fardata.n_sample);
         std::cout << "n_point = " << n_point << std::endl;
 
         MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
         double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
-        alldata_db.row(0) = far_ref.Exyz.colwise().norm() / maxE;
-        alldata_db.row(1) = fardata.Exyz.colwise().norm() / maxE;
+        alldata_db.row(0) = (far_ref.Exyz.colwise().norm() / maxE).array().log10()*20;
+        // alldata_db.row(1) = (fardata.Exyz.colwise().norm() / maxE).array().log10()*20;
+        alldata_db.row(1) = (fardata.Exyz.colwise().norm() / fardata.Exyz.colwise().norm().maxCoeff()).array().log10()*20;
         
         MatrixXd data = Matrix<double,2,Dynamic>::Zero(2,n_point);
         Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,n_point);
-
-        std::cout << "y cut = \n" << fardata.Rxyz.block(0,n_point*(n_point/2 - 1),3,n_point) << std::endl;
 
         for(int i = 0 ; i < n_point ; i++){
             data(0,i) = alldata_db(0,n_point*(n_point/2 - 1) + i);
@@ -471,7 +474,8 @@ namespace calcu_field{
         }
 
         std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
-        std::string title = "sample title ycut";
+        std::replace(title.begin(),title.end(),'_','-');
+        title += " (ycut)";
         std::vector<std::string> graph_info{title,"y[m]","relative mag[dB]","phase[{/Symbol \260}]"};
         plot_field_global(val_x,data,key_info,graph_info);
         return 0;

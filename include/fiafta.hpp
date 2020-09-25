@@ -10,13 +10,14 @@ namespace calcu_field{
     public:
         fiafta(){
             std::cout << "this is calcu field constructa"  << std::endl;
+            freq = 0;
         }
         
     public:
         static constexpr double pai = 3.141592653589793;
         static constexpr double myu = 1.256637062121e-6; //myu_0 [N A^(-2)]
         static constexpr double eps = 8.854187812813e-12; // eps_0 [F m^(-1)]
-        static constexpr double freq = 27e9;// 27Ghz;
+        // static constexpr double freq = 27e9;// 27Ghz;
         static constexpr double accur_SVD = 300;// singular value less than this is set to be 0 
 
     private:
@@ -24,6 +25,7 @@ namespace calcu_field{
         int P_theata;
         int P_phai;
         int P;
+        double freq;
         double w_theata;
         double w_phai;
         double k_0;
@@ -56,8 +58,8 @@ namespace calcu_field{
         int calcu_fardata_U(data_field::field& field_calcu,const data_field::field& ref);
         int calcu_error(const data_field::field& field_calcu,const data_field::field& ref,std::string title);
         int calcu_ansbyEigen();
-        int make_graph_xcut();
-        int make_graph_ycut();
+        int make_graph_xcut(std::string title);
+        int make_graph_ycut(std::string title);
         int print_info();
         int savetxt_csv(Mat_XC data, std::string filename, bool cflag);
 

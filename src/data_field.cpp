@@ -78,9 +78,9 @@ namespace data_field{
                 if(index < 3){
                     Rxyz(index,column) = std::stod(element);
                 }else if(index < 6){
-                    Exyz(index-3,column) += std::complex<double> (std::stod(element),0);
+                    Exyz(index-3,column) += std::complex<double> (std::stod(element)/100,0);
                 }else if(index < 9){
-                    Exyz(index-6,column) += std::complex<double> (0,std::stod(element));
+                    Exyz(index-6,column) += std::complex<double> (0,std::stod(element)/100);
                 }
 
                 if(index >= 9){
