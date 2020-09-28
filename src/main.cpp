@@ -18,8 +18,8 @@ int main(int argc, char** argv){
     std::string file_near_ref;
     std::string file_far_ref;
     
-    bool flag_fiafta = false;
-    bool flag_fourier = true;
+    bool flag_fiafta = true;
+    bool flag_fourier = false;
 
     if(flag_fiafta){
         int val_L = 0;
@@ -39,6 +39,7 @@ int main(int argc, char** argv){
         calcu_field::fiafta fiafta1;
         fiafta1.near_ref.read_file(file_near_ref);
         fiafta1.far_ref.read_file(file_far_ref);
+        fiafta1.near_ref.print_info();
         // fiafta1.near_ref.print_info();
         fiafta1.start_calcu(val_L);
         fiafta1.set_matrix(fiafta1.A,fiafta1.near_ref.Rxyz);
@@ -51,7 +52,7 @@ int main(int argc, char** argv){
 
         fiafta1.print_info();
         std::string title = file_near_ref + " to " + file_far_ref;
-        // fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
+        fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
         fiafta1.make_graph_xcut(title);
         fiafta1.make_graph_ycut(title);
 
