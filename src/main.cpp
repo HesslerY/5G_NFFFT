@@ -53,8 +53,8 @@ int main(int argc, char** argv){
         fiafta1.print_info();
         std::string title = file_near_ref + " to " + file_far_ref;
         fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
-        fiafta1.make_graph_xcut(title);
-        fiafta1.make_graph_ycut(title);
+        data_field::make_graph_xcut(fiafta1.fardata,fiafta1.far_ref,title);
+        data_field::make_graph_ycut(fiafta1.fardata,fiafta1.far_ref,title);
 
         // std::cout << "finish all calculation" << std::endl;
         // fiafta1.savetxt_csv(fiafta1.A,"data_A",true);
@@ -74,31 +74,5 @@ int main(int argc, char** argv){
         std::string title = file_near_ref + " to " + file_far_ref;
         sample.calcu_pws(title);
     }
-
-
-
-    // ルジャンドル*ハンケル
-    // double krm = 0.5;
-    // double kdotr = 0.5;
-    // Complexd sum = 0;
-    // for(int i = 0 ; i < 50 ; i++){
-    //     Complexd result =  (double)(2*i+1)*sph_hankel_2(i,krm)*std::legendre(i,kdotr)*std::pow(Complexd(0,-1),i);
-    //     sum += result;
-    //     std::cout << "(" << i << ") = " << result ;
-    //     std::cout << " :(sum) = " << sum <<std::endl;
-    //     // std::cout << i <<"hankel_2 = " << sph_hankel_2(i,krm) <<std::endl;;
-    // }
-
-    // MatrixXd mat(2,2);
-    // mat << 1 ,3 ,4 ,5;
-
-    // // std::cout << mat.norm() << std::endl;
-    // std::cout << mat.rowwise().norm() << std::endl;
-    // std::cout << mat.array().log10() <<std::endl;
-    // std::cout << mat.topRows(2) << std::endl;
-
-    // Complexd temp(-2,-1e-10);
-    // std::cout << c_check(temp) <<std::endl;
-
     return 0;
 }

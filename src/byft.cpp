@@ -8,7 +8,9 @@ namespace calcu_field{
         fardata.copy_data(far_ref);
         fardata.calcu_polar();
         // near_ref.print_info();
+        freq = near_ref.freq;
         k = 2*pai*freq*std::sqrt(myu*eps);
+        std::cout << "freq = " << freq << std::endl;
 
         A_pws = Mat_XC::Zero(3,near_ref.Exyz.cols());
         
@@ -63,7 +65,10 @@ namespace calcu_field{
         std::vector<std::string> graph_info{title,"sample points","relative mag[dB]",""};
 
         plot_field_global(val_x,power_db,key_info,graph_info);
+        data_field::make_graph_xcut(far_ref,fardata,title);
+        data_field::make_graph_ycut(far_ref,fardata,title);
         
         return 0;
     }
+
 }

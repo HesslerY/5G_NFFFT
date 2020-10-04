@@ -46,6 +46,9 @@ namespace data_field{
         int copy_data(const field& in_field);
         int print_info();
     };
+
+    int make_graph_xcut(const data_field::field far_ref,const data_field::field fardata,std::string title);
+    int make_graph_ycut(const data_field::field far_ref,const data_field::field fardata,std::string title);
 }
 
 #endif

@@ -15,14 +15,16 @@ namespace calcu_field{
         static constexpr double pai = 3.141592653589793;
         static constexpr double myu = 1.256637062121e-6; //myu_0 [N A^(-2)]
         static constexpr double eps = 8.854187812813e-12; // eps_0 [F m^(-1)]
-        static constexpr double freq = 27e9;// 27Ghz;
+        // static constexpr double freq = 27e9;// 27Ghz;
 
         double k;
+        double freq;
 
         Mat_XC A_pws;
 
         public:
         int calcu_pws(std::string title);
+
     };
 }
 

@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include <Eigen/Dense>
+
 using namespace Eigen;
 
 typedef Matrix<std::complex<double>,Dynamic,Dynamic> Mat_XC;
