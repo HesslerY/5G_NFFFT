@@ -28,7 +28,7 @@ namespace calcu_field{
         A_pws = A_pws / near_ref.Exyz.cols() / (2*pai);
         std::cout << "A_pws = \n" << A_pws << std::endl;
 
-        for(int i = 0; i < fardata.Exyz.cols() ; i++){
+    for(int i = 0; i < fardata.Exyz.cols() ; i++){
             double kz = k * cos(fardata.Rpolar(1,i));
             double r = fardata.Rpolar(0,i);
             fardata.Exyz(0,i) = Complexd(0,1) * exp(Complexd(0,-1) * k * r) / r * kz * A_pws(0,i);
