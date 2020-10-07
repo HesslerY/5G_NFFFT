@@ -39,14 +39,12 @@ int main(int argc, char** argv){
         calcu_field::fiafta fiafta1;
         fiafta1.near_ref.read_file(file_near_ref);
         fiafta1.far_ref.read_file(file_far_ref);
-        fiafta1.near_ref.print_info();
-        // fiafta1.near_ref.print_info();
         fiafta1.start_calcu(val_L);
         fiafta1.set_matrix(fiafta1.A,fiafta1.near_ref.Rxyz);
         // fiafta1.calcu_ansbySVD();
         fiafta1.calcu_ansbyEigen();
-        fiafta1.calcu_fardata(fiafta1.fardata,fiafta1.far_ref);
-        // fiafta1.calcu_fardata2(fiafta1.fardata,fiafta1.far_ref);
+        // fiafta1.calcu_fardata(fiafta1.fardata,fiafta1.far_ref);
+        fiafta1.calcu_fardata2(fiafta1.fardata,fiafta1.far_ref);
         // fiafta1.calcu_fardata3(fiafta1.fardata,fiafta1.far_ref);
         // fiafta1.calcu_fardata_U(fiafta1.fardata,fiafta1.far_ref);
 

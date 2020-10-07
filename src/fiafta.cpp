@@ -26,22 +26,22 @@ namespace calcu_field{
 
         // set measured U vector ()
         near_ref.calcu_polar();
-        // U_mea = MatrixXd::Zero(near_ref.n_sample,1);
-        // for(int i = 0 ; i < near_ref.n_sample ; i++){
-        //     // U_mea(i) = near_ref.Exyz.col(i)(0);
-        //     // U_mea(i) = near_ref.Exyz.col(i).sum();
-        //     // U_mea(i) = near_ref.Exyz.col(i).norm();
-        //     U_mea(i) = near_ref.Epolar(1,i) + near_ref.Epolar(2,i);
-        // }
-
-        U_mea = MatrixXd::Zero(near_ref.n_sample * 2 ,1);
-        for(int i = 0 ; i < near_ref.n_sample * 2 ; i++){
-            if(i < near_ref.n_sample){
-                U_mea(i) = c_check(near_ref.Epolar(1,i));
-            }else{
-                U_mea(i) = c_check(near_ref.Epolar(2,i-near_ref.n_sample));
-            }
+        U_mea = MatrixXd::Zero(near_ref.n_sample,1);
+        for(int i = 0 ; i < near_ref.n_sample ; i++){
+            // U_mea(i) = near_ref.Exyz.col(i)(0);
+            // U_mea(i) = near_ref.Exyz.col(i).sum();
+            U_mea(i) = near_ref.Exyz.col(i).norm();
+            // U_mea(i) = near_ref.Epolar(1,i) + near_ref.Epolar(2,i);
         }
+
+        // U_mea = MatrixXd::Zero(near_ref.n_sample * 2 ,1);
+        // for(int i = 0 ; i < near_ref.n_sample * 2 ; i++){
+        //     if(i < near_ref.n_sample){
+        //         U_mea(i) = c_check(near_ref.Epolar(1,i));
+        //     }else{
+        //         U_mea(i) = c_check(near_ref.Epolar(2,i-near_ref.n_sample));
+        //     }
+        // }
 
         // make wavenumber vec_k
         double delta_theata = pai/(P_theata - 1);
@@ -95,7 +95,7 @@ namespace calcu_field{
     int fiafta::set_matrix(Mat_XC& mat_cup,const Matrix<double,3,Dynamic>& Rxyz){
         std::cout << "#set matrix mat_cup" << std::endl;
         int n_sample = Rxyz.cols();
-        mat_cup.resize(n_sample*2 , 2*P);
+        mat_cup.resize(n_sample , 2*P);
         // A.resize(near_ref.n_sample , P);
         // std::cout << "A size = " << A.rows() << " * " << A.cols() << std::endl;
         for(int j = 0 ; j < mat_cup.cols() ; j++){
@@ -270,6 +270,7 @@ namespace calcu_field{
         // }
         std::cout << "finish far set matrix" << std::endl;
         Mat_XC U_far = A_far * ans;
+        std::cout << "this is debug" <<std::endl;
 
         for(int i= 0 ; i < field_calcu.Rxyz.cols() ; i++){
             field_calcu.Epolar(0,i) = 0;
@@ -303,13 +304,13 @@ namespace calcu_field{
                     field_calcu.Exyz(2,i) += -E_theata*std::sin(vec_k_angle[j](0));
                 }else if(j >= P){
                     E_phai = w_theata*w_phai*calcu_T(vec_k[j-P],field_calcu.Rxyz.col(i))*vec_sin[j-P]*ans(j);
-                    field_calcu.Exyz(0,i) +=  - E_phai*std::sin(vec_k_angle[j-P](1));
-                    field_calcu.Exyz(1,i) +=  E_phai*std::cos(vec_k_angle[j-P](1));
+                    field_calcu.Exyz(0,i) += -E_phai*std::sin(vec_k_angle[j-P](1));
+                    field_calcu.Exyz(1,i) += E_phai*std::cos(vec_k_angle[j-P](1));
                     field_calcu.Exyz(2,i) += 0;
                 }
             }
         }
-        // field_calcu.Exyz = field_calcu.Exyz * coeff_A;
+        field_calcu.Exyz = field_calcu.Exyz * coeff_A;
         return 0;
     }
 
@@ -492,10 +493,9 @@ namespace calcu_field{
         std::cout << "P_theata = " << P_theata << std::endl;
         std::cout << "P_phai = " << P_phai << std::endl;
         
-        // std::cout << "A.row = " << A.rows() << std::endl;
-        // std::cout << "A.col = " << A.cols() << std::endl;
+        std::cout << "A.row = " << A.rows() << std::endl;
+        std::cout << "A.col = " << A.cols() << std::endl;
         // std::cout << "A.col(0) = " << A.col(0).transpose() <<std::endl;
-        // std::cout << "A.col(465) = " << A.col(465).transpose() <<std::endl;
         // std::cout << "A = " << A << std::endl;
 
         std::cout << "========= end =========" << std::endl;
