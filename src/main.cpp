@@ -45,7 +45,6 @@ int main(int argc, char** argv){
         fiafta1.calcu_ansbyEigen();
         // fiafta1.calcu_fardata(fiafta1.fardata,fiafta1.far_ref);
         fiafta1.calcu_fardata2(fiafta1.fardata,fiafta1.far_ref);
-        // fiafta1.calcu_fardata3(fiafta1.fardata,fiafta1.far_ref);
         // fiafta1.calcu_fardata_U(fiafta1.fardata,fiafta1.far_ref);
 
         fiafta1.print_info();

@@ -29,8 +29,8 @@ namespace calcu_field{
         U_mea = MatrixXd::Zero(near_ref.n_sample,1);
         for(int i = 0 ; i < near_ref.n_sample ; i++){
             // U_mea(i) = near_ref.Exyz.col(i)(0);
-            // U_mea(i) = near_ref.Exyz.col(i).sum();
-            U_mea(i) = near_ref.Exyz.col(i).norm();
+            U_mea(i) = near_ref.Exyz.col(i).sum();
+            // U_mea(i) = near_ref.Exyz.col(i).norm();
             // U_mea(i) = near_ref.Epolar(1,i) + near_ref.Epolar(2,i);
         }
 
@@ -257,7 +257,7 @@ namespace calcu_field{
         return 1;
     }
 
-// calcu fardata from ans (U_mea = A*ans) angle by r_m
+// calcu fardata from ans (U_mea = A*ans) and U_far 
     int fiafta::calcu_fardata(data_field::field& field_calcu,const data_field::field& ref){
         std::cout << "#calcu_fardata" << std::endl;
         field_calcu.copy_data(ref);
@@ -265,9 +265,6 @@ namespace calcu_field{
 
         Mat_XC A_far;
         set_matrix(A_far,field_calcu.Rxyz);
-        // if(A_far == A){
-        //     std::cout << "///// Afar = A ////\n" <<std::endl;
-        // }
         std::cout << "finish far set matrix" << std::endl;
         Mat_XC U_far = A_far * ans;
         std::cout << "this is debug" <<std::endl;
@@ -287,57 +284,37 @@ namespace calcu_field{
         return 0;
     }
 
-// calcu fardata from ans (U_mea = A*ans) angle by k
+// calcu fardata from ans (U_mea = A*ans) angle by r_m
     int fiafta::calcu_fardata2(data_field::field& field_calcu,const data_field::field& ref){
         Mat_XC Epolar(3,ref.n_sample);//E_r , E_theata , E_phai @field_calcu
         field_calcu.copy_data(ref);
+        field_calcu.calcu_polar();
+        field_calcu.Epolar = Matrix<double,3,Dynamic>::Zero(3,field_calcu.n_sample);
 
         // 各r_iに対して計算 T*Dj
         for(int i = 0 ; i < field_calcu.Rxyz.cols() ; i++){
             for(int j = 0 ; j < ans.rows() ; j++){
                 Complexd E_theata = 0;
                 Complexd E_phai = 0;
+                double theta = field_calcu.Rpolar(1,i);
+                double phi = field_calcu.Rpolar(2,i);
                 if (j < P){
                     E_theata = w_theata*w_phai*calcu_T(vec_k[j],field_calcu.Rxyz.col(i))*vec_sin[j]*ans(j);
-                    field_calcu.Exyz(0,i) += E_theata*std::cos(vec_k_angle[j](0))*std::cos(vec_k_angle[j](1)) ;
-                    field_calcu.Exyz(1,i) += E_theata*std::cos(vec_k_angle[j](0))*std::sin(vec_k_angle[j](1)) ;
-                    field_calcu.Exyz(2,i) += -E_theata*std::sin(vec_k_angle[j](0));
+                    // field_calcu.Exyz(0,i) += E_theata*std::cos(theta)*std::cos(phi) ;
+                    // field_calcu.Exyz(1,i) += E_theata*std::cos(theta)*std::sin(phi) ;
+                    // field_calcu.Exyz(2,i) += -E_theata*std::sin(theta);
+                    field_calcu.Epolar(1,i) += E_theata;
                 }else if(j >= P){
                     E_phai = w_theata*w_phai*calcu_T(vec_k[j-P],field_calcu.Rxyz.col(i))*vec_sin[j-P]*ans(j);
-                    field_calcu.Exyz(0,i) += -E_phai*std::sin(vec_k_angle[j-P](1));
-                    field_calcu.Exyz(1,i) += E_phai*std::cos(vec_k_angle[j-P](1));
-                    field_calcu.Exyz(2,i) += 0;
+                    // field_calcu.Exyz(0,i) += -E_phai*std::sin(theta);
+                    // field_calcu.Exyz(1,i) += E_phai*std::cos(theta);
+                    // field_calcu.Exyz(2,i) += 0;
+                    field_calcu.Epolar(2,i) += E_phai;
                 }
             }
         }
-        field_calcu.Exyz = field_calcu.Exyz * coeff_A;
-        return 0;
-    }
-
-    int fiafta::calcu_fardata3(data_field::field& field_calcu,const data_field::field& ref){
-        field_calcu.copy_data(ref);
-
-        // Mat_XC temp = A * ans;
-        Mat_XC temp = U_mea;
-        for(int i = 0 ; i < field_calcu.Rxyz.cols() ; i++){
-            Complexd E_theata = temp(i);
-            Complexd E_phai = temp(i + ref.Rxyz.cols());
-
-            double r_theata = std::acos( field_calcu.Rxyz(2,i)/field_calcu.Rxyz.col(i).norm() );
-            double r_phai;
-            if(field_calcu.Rxyz(1,i) == 0 && field_calcu.Rxyz(0,i) == 0){
-                r_phai = 0;
-            }else{
-                r_phai = std::atan2(field_calcu.Rxyz(1,i) , field_calcu.Rxyz(0,i));
-            }
-
-            field_calcu.Exyz(0,i) = E_theata*std::cos(r_theata)*std::cos(r_phai) - E_phai*std::sin(r_phai);
-            field_calcu.Exyz(1,i) = E_theata*std::cos(r_theata)*std::sin(r_phai) + E_phai*std::cos(r_phai);
-            field_calcu.Exyz(2,i) = -E_theata*std::sin(r_theata);
-        }
         // field_calcu.Exyz = field_calcu.Exyz * coeff_A;
-        std::cout << "finish calculating fardata" <<std::endl;
-        // std::cout << field_calcu.Exyz <<std::endl;
+        field_calcu.calcu_cart();
         return 0;
     }
 
@@ -377,6 +354,7 @@ namespace calcu_field{
             std::cout << "two fields Rxyz and Exyz.size() match" <<std::endl;
             std::cout << "far_ref Exyz = \n" << ref.Exyz << std::endl;
             std::cout << "fardata Exyz = \n" << field_calcu.Exyz << std::endl;
+            std::cout << "fardata Epolar = \n" << field_calcu.Epolar << std::endl;
             std::cout << "error (fardata - far_ref) = \n" << error << std::endl; 
             std::cout << "sum_data = " <<sum_data <<std::endl;
             std::cout << "sum_ref = " << sum_ref << std::endl;
@@ -426,63 +404,6 @@ namespace calcu_field{
         return 0;
     }
 
-    // int fiafta::make_graph_xcut(std::string title){
-    //     std::cout << "this is make grapah function" << std::endl;
-    //     int n_point = (int)std::sqrt(fardata.n_sample);
-    //     std::cout << "n_point = " << n_point << std::endl;
-
-    //     MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
-    //     double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
-    //     alldata_db.row(0) = (far_ref.Exyz.colwise().norm() / maxE).array().log10()*20;
-    //     // alldata_db.row(1) = (fardata.Exyz.colwise().norm() / maxE).array().log10()*20;
-    //     alldata_db.row(1) = (fardata.Exyz.colwise().norm() / fardata.Exyz.colwise().norm().maxCoeff()).array().log10()*20;
-        
-    //     MatrixXd data = Matrix<double,2,Dynamic>::Zero(2,n_point);
-    //     Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,n_point);
-
-    //     for(int i = 0 ; i < n_point ; i++){
-    //         data(0,i) = alldata_db(0,n_point*i + n_point/2 - 1);
-    //         data(1,i) = alldata_db(1,n_point*i + n_point/2 - 1);
-    //         val_x(0,i) = fardata.Rxyz(0,n_point*i + n_point/2 - 1); // plot by x
-    //     }
-
-    //     std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
-    //     std::replace(title.begin(),title.end(),'_','-');
-    //     title += " (x cut)";
-    //     std::vector<std::string> graph_info{title,"x[m]","relative mag[dB]","phase[{/Symbol \260}]"};
-    //     plot_field_global(val_x,data,key_info,graph_info);
-    //     return 0;
-    // }
-
-    // int fiafta::make_graph_ycut(std::string title){
-    //     std::cout << "this is make grapah function" << std::endl;
-    //     int n_point = (int)std::sqrt(fardata.n_sample);
-    //     std::cout << "n_point = " << n_point << std::endl;
-
-    //     MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
-    //     double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
-    //     alldata_db.row(0) = (far_ref.Exyz.colwise().norm() / maxE).array().log10()*20;
-    //     // alldata_db.row(1) = (fardata.Exyz.colwise().norm() / maxE).array().log10()*20;
-    //     alldata_db.row(1) = (fardata.Exyz.colwise().norm() / fardata.Exyz.colwise().norm().maxCoeff()).array().log10()*20;
-        
-    //     MatrixXd data = Matrix<double,2,Dynamic>::Zero(2,n_point);
-    //     Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,n_point);
-
-    //     for(int i = 0 ; i < n_point ; i++){
-    //         data(0,i) = alldata_db(0,n_point*(n_point/2 - 1) + i);
-    //         data(1,i) = alldata_db(1,n_point*(n_point/2 - 1) + i);
-    //         val_x(0,i) = fardata.Rxyz(1,n_point*(n_point/2 - 1) + i); // plot by y
-    //     }
-
-    //     std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
-    //     std::replace(title.begin(),title.end(),'_','-');
-    //     title += " (ycut)";
-    //     std::vector<std::string> graph_info{title,"y[m]","relative mag[dB]","phase[{/Symbol \260}]"};
-    //     plot_field_global(val_x,data,key_info,graph_info);
-    //     return 0;
-    // }
-
-
 // print info 
     int fiafta::print_info(){
         std::cout << "========= info calcu=========" << std::endl;
@@ -512,7 +433,7 @@ namespace calcu_field{
         std::cout << "========= info debug =========" << std::endl;
         far_ref.calcu_polar();
         // std::cout << "far_Rpolar = \n" << far_ref.Rpolar << std::endl;
-        std::cout << "far_Epolar = \n" << far_ref.Epolar << std::endl;
+        std::cout << "far_ref_Epolar = \n" << far_ref.Epolar << std::endl;
         near_ref.calcu_polar();
         // std::cout << "near_ref_Rpolar = \n" << near_ref.Rpolar << std::endl;
         std::cout << "near_ref_Epolar = \n" << near_ref.Epolar << std::endl;

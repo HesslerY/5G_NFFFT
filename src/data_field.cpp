@@ -98,7 +98,6 @@ namespace data_field{
     int field::calcu_polar(){
         if(Rpolar.size() != 0 || Epolar.size() != 0 ){
             std::cout << "polar info is already calculated" << std::endl;
-            return 0;
         }else{
             std::cout << "#calcu Epolar and Rpolar from xyz" << std::endl;
         }
@@ -127,7 +126,6 @@ namespace data_field{
     int field::calcu_cart(){
         if(Exyz != Matrix<double,3,Dynamic>::Zero(3,n_sample)){
             std::cout << "Exyz info is already calculated" << std::endl;
-            return 0;
         }else{
             std::cout << "#calcu Exyz from Epolar" << std::endl;
         }
@@ -167,9 +165,9 @@ namespace data_field{
     }
 
     int make_graph_xcut(data_field::field far_ref,data_field::field fardata,std::string title){
-        std::cout << "this is make grapah function" << std::endl;
+        // std::cout << "this is make grapah function" << std::endl;
         int n_point = (int)std::sqrt(fardata.n_sample);
-        std::cout << "n_point = " << n_point << std::endl;
+        // std::cout << "n_point = " << n_point << std::endl;
 
         MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
         double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
@@ -195,9 +193,9 @@ namespace data_field{
     }
 
     int make_graph_ycut(const data_field::field far_ref,const data_field::field fardata,std::string title){
-        std::cout << "this is make grapah function" << std::endl;
+        // std::cout << "this is make grapah function" << std::endl;
         int n_point = (int)std::sqrt(fardata.n_sample);
-        std::cout << "n_point = " << n_point << std::endl;
+        // std::cout << "n_point = " << n_point << std::endl;
 
         MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
         double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
