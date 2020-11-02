@@ -11,7 +11,7 @@ int plot_field_global(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<
         graph_info[0] = "sample title";
         graph_info[1] = "xlabel";
         graph_info[2] = "y1label";
-        graph_info[3] = "y2label";
+        // graph_info[3] = "y2label";
     }
     if(key_info.size() == 0 ){
         key_info.resize(val_y.size());
@@ -46,7 +46,7 @@ int plot_field_global(const MatrixXd& val_x, const MatrixXd& val_y, std::vector<
     fprintf(gp,"set title \"%s\"\n", graph_info[0].c_str());
     fprintf(gp,"set xlabel \"%s\"\n",graph_info[1].c_str());
     fprintf(gp,"set ylabel \"%s\"\n",graph_info[2].c_str());
-    fprintf(gp,"set y2label \"%s\"\n",graph_info[3].c_str());
+    // fprintf(gp,"set y2label \"%s\"\n",graph_info[3].c_str());
     // fprintf(gp,"%s\n",cmd.str().c_str());
 
     for(int i = 0 ; i < val_y.rows() ; i++){

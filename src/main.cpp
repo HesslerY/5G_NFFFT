@@ -17,26 +17,34 @@ int main(int argc, char** argv){
 
     std::string file_near_ref;
     std::string file_far_ref;
-    
+    int val_L = 0;
+    if(argc == 3){
+        file_near_ref = argv[1];
+        file_far_ref = argv[2];
+    }else if(argc == 4){
+        val_L = std::stoi(argv[1]);
+        file_near_ref = argv[2];
+        file_far_ref = argv[3];
+    }else{
+        ERR("error (./field_trans (int)L nearfield.txt farfield.txt)");
+    }
+
     bool flag_fiafta = true;
-    bool flag_fourier = false;
+    bool flag_fourier = true;
+    calcu_field::fiafta fiafta1;
+    calcu_field::byft sample;
+
+    if(flag_fourier){
+
+        sample.near_ref.read_file(file_near_ref);
+        sample.far_ref.read_file(file_far_ref);
+        std::string title = file_near_ref + " to " + file_far_ref;
+        sample.calcu_pws(title);
+    }
 
     if(flag_fiafta){
-        int val_L = 0;
-        if(argc == 3){
-            file_near_ref = argv[1];
-            file_far_ref = argv[2];
-        }else if(argc == 4){
-            val_L = std::stoi(argv[1]);
-            file_near_ref = argv[2];
-            file_far_ref = argv[3];
-        }else{
-            ERR("error (./field_trans (int)L nearfield.txt farfield.txt)");
-        }
-
         std::cout << "val_L = " << val_L << std::endl;
         std::cout.precision(10);
-        calcu_field::fiafta fiafta1;
         fiafta1.near_ref.read_file(file_near_ref);
         fiafta1.far_ref.read_file(file_far_ref);
         fiafta1.start_calcu(val_L);
@@ -49,27 +57,20 @@ int main(int argc, char** argv){
 
         fiafta1.print_info();
         std::string title = file_near_ref + " to " + file_far_ref;
-        fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
         data_field::make_graph_xcut(fiafta1.fardata,fiafta1.far_ref,title);
         data_field::make_graph_ycut(fiafta1.fardata,fiafta1.far_ref,title);
+        fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
 
         // std::cout << "finish all calculation" << std::endl;
         // fiafta1.savetxt_csv(fiafta1.A,"data_A",true);
         // fiafta1.savetxt_csv(fiafta1.U_mea,"data_Umea",true);
         // fiafta1.savetxt_csv(fiafta1.ans,"data_ans",true);
     }
-    if(flag_fourier){
-        if(argc != 3){
-            ERR("error ./field_trans nearfield.txt farfield.txt");
-        }
-        file_near_ref = argv[1];
-        file_far_ref = argv[2];
 
-        calcu_field::byft sample;
-        sample.near_ref.read_file(file_near_ref);
-        sample.far_ref.read_file(file_far_ref);
-        std::string title = file_near_ref + " to " + file_far_ref;
-        sample.calcu_pws(title);
+
+    if(flag_fiafta && flag_fourier){
+        data_field::make_graph_xcut(fiafta1.fardata,sample.fardata,"FIAFTA (ref=FT)");
+        data_field::make_graph_ycut(fiafta1.fardata,sample.fardata,"FIAFTA (ref=FT)");
     }
     return 0;
 }

@@ -164,13 +164,14 @@ namespace data_field{
         std::cout << "========== end info ===========" << std::endl;
     }
 
-    int make_graph_xcut(data_field::field far_ref,data_field::field fardata,std::string title){
+    int make_graph_xcut(data_field::field fardata,data_field::field far_ref,std::string title){
         // std::cout << "this is make grapah function" << std::endl;
         int n_point = (int)std::sqrt(fardata.n_sample);
         // std::cout << "n_point = " << n_point << std::endl;
 
         MatrixXd alldata_db = Matrix<double,2,Dynamic>::Zero(2,fardata.n_sample);
         double maxE = far_ref.Exyz.colwise().norm().maxCoeff();
+        std::cout << "maxE = " << maxE << std::endl;
         alldata_db.row(0) = (far_ref.Exyz.colwise().norm() / maxE).array().log10()*20;
         // alldata_db.row(1) = (fardata.Exyz.colwise().norm() / maxE).array().log10()*20;
         alldata_db.row(1) = (fardata.Exyz.colwise().norm() / fardata.Exyz.colwise().norm().maxCoeff()).array().log10()*20;
@@ -179,10 +180,11 @@ namespace data_field{
         Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,n_point);
 
         for(int i = 0 ; i < n_point ; i++){
-            data(0,i) = alldata_db(0,n_point*i + n_point/2 - 1);
-            data(1,i) = alldata_db(1,n_point*i + n_point/2 - 1);
-            val_x(0,i) = fardata.Rxyz(0,n_point*i + n_point/2 - 1); // plot by x
+            data(0,i) = alldata_db(0,n_point*i + (int)n_point/2);
+            data(1,i) = alldata_db(1,n_point*i + (int)n_point/2);
+            val_x(0,i) = fardata.Rxyz(0,n_point*i + (int)n_point/2); // plot by x
         }
+        std::cout << std::endl;
 
         std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
         std::replace(title.begin(),title.end(),'_','-');
@@ -192,7 +194,7 @@ namespace data_field{
         return 0;
     }
 
-    int make_graph_ycut(const data_field::field far_ref,const data_field::field fardata,std::string title){
+    int make_graph_ycut(const data_field::field fardata,const data_field::field far_ref,std::string title){
         // std::cout << "this is make grapah function" << std::endl;
         int n_point = (int)std::sqrt(fardata.n_sample);
         // std::cout << "n_point = " << n_point << std::endl;
@@ -207,10 +209,12 @@ namespace data_field{
         Matrix<double,1,Dynamic> val_x = Matrix<double,1,Dynamic>::Zero(1,n_point);
 
         for(int i = 0 ; i < n_point ; i++){
-            data(0,i) = alldata_db(0,n_point*(n_point/2 - 1) + i);
-            data(1,i) = alldata_db(1,n_point*(n_point/2 - 1) + i);
-            val_x(0,i) = fardata.Rxyz(1,n_point*(n_point/2 - 1) + i); // plot by y
+            data(0,i) = alldata_db(0,n_point*((int)n_point/2) + i);
+            data(1,i) = alldata_db(1,n_point*((int)n_point/2) + i);
+            val_x(0,i) = fardata.Rxyz(1,n_point*((int)n_point/2) + i); // plot by y
         }
+        std::cout << std::endl;
+
 
         std::vector<std::string> key_info{"amp_{ref}","amp_{cal}","amp_{error}","phase_{ref}","phase_{cal}"};
         std::replace(title.begin(),title.end(),'_','-');
