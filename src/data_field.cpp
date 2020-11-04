@@ -64,34 +64,60 @@ namespace data_field{
             }
         }
 
-        getline(inf,str);
-    //data csv format (x,y,z,realEx,realEy,realEz,imgEx,imgEy,imgEz)
-        Rxyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
-        Exyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
-        delim = ',';
-        int column = 0;
-        while(getline(inf, str)){
-            std::stringstream ss(str);
-            std::string element;
-            int index = 0;
-            while(getline(ss,element,delim)){
-                if(index < 3){
-                    Rxyz(index,column) = std::stod(element);
-                }else if(index < 6){
-                    Exyz(index-3,column) += std::complex<double> (std::stod(element),0);
-                }else if(index < 9){
-                    Exyz(index-6,column) += std::complex<double> (0,std::stod(element));
-                    // Exyz(index-6,column) += 0;
-                }
 
-                if(index >= 9){
-                    ERR("error input file has more column than 9");
+        delim = ',';
+        getline(inf,str);
+        if(str == "x,y,z,realEx,realEy,realEz,imgEx,imgEy,imgEz"){
+            //data csv format (x,y,z,realEx,realEy,realEz,imgEx,imgEy,imgEz)
+            Rxyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
+            Exyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
+            int column = 0;
+            while(getline(inf, str)){
+                std::stringstream ss(str);
+                std::string element;
+                int index = 0;
+                while(getline(ss,element,delim)){
+                    if(index < 3){
+                        Rxyz(index,column) = std::stod(element);
+                    }else if(index < 6){
+                        Exyz(index-3,column) += std::complex<double> (std::stod(element),0);
+                    }else if(index < 9){
+                        Exyz(index-6,column) += std::complex<double> (0,std::stod(element));
+                        // Exyz(index-6,column) += 0;
+                    }
+                    if(index >= 9){
+                        ERR("error input file has more column than 9");
+                    }
+                    index++;
                 }
-                index++;
+                column++;
             }
-            column++;
+            std::cout << "#finish read file = " << filename <<std::endl;
+
+        }else if(str == "R,THETA,PHI,abs|E|"){
+            // data csv format is "R,THETA,PHI,abs|E|"
+            std::cout << "this file format is polar coordinates";
+            Rpolar = Matrix<double,3,Dynamic>::Zero(3,n_sample);
+            Epolar = Matrix<double,3,Dynamic>::Zero(3,n_sample);
+            int column = 0;
+            while (getline(inf,str)){
+                std::stringstream ss(str);
+                std::string element;
+                int index = 0;
+                while(getline(ss,element,delim)){
+                    if(index < 3){
+                        Rpolar(index,column) = std::stod(element);
+                    }else if(index == 4){
+                        Epolar(0,column) = std::stod(element);
+                    }
+                    index++;
+                }
+                column++;
+            }            
+        }else{
+            ERR("ERRROR:Reading file format is UNKNOWN");
         }
-        std::cout << "#finish read file = " << filename <<std::endl;
+
         return 1;
     }
 
@@ -162,6 +188,8 @@ namespace data_field{
         std::cout << "data size = " << Rxyz.cols() <<std::endl;
         std::cout << "Exyz = " << Exyz.transpose() << std::endl;
         std::cout << "========== end info ===========" << std::endl;
+
+        return 0;
     }
 
     int make_graph_xcut(data_field::field fardata,data_field::field far_ref,std::string title){
