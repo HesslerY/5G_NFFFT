@@ -2,6 +2,7 @@
 
 namespace data_field{
     int field::read_file(std::string filename){
+        long nline = CountNumbersofTextLines(filename);
         std::ifstream inf(filename);
         if(!inf){
             ERR("error cannot open the file :"+ filename);
@@ -11,6 +12,7 @@ namespace data_field{
         std::string str;
         char delim = '=';
         while(getline(inf, str)){
+            nline--;
             if(str == "#data"){
                 break;
             }
@@ -66,8 +68,12 @@ namespace data_field{
 
 
         delim = ',';
+        nline = nline - 2;// remove format line and last line
         getline(inf,str);
         if(str == "x,y,z,realEx,realEy,realEz,imgEx,imgEy,imgEz"){
+            if(n_sample != nline){
+                ERR("n_sample != number of lines");
+            }
             //data csv format (x,y,z,realEx,realEy,realEz,imgEx,imgEy,imgEz)
             Rxyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
             Exyz = Matrix<double,3,Dynamic>::Zero(3,n_sample);
@@ -92,11 +98,11 @@ namespace data_field{
                 }
                 column++;
             }
-            std::cout << "#finish read file = " << filename <<std::endl;
 
         }else if(str == "R,THETA,PHI,abs|E|"){
             // data csv format is "R,THETA,PHI,abs|E|"
-            std::cout << "this file format is polar coordinates";
+            std::cout << "this file format is polar coordinates" << std::endl;
+            n_sample = nline;
             Rpolar = Matrix<double,3,Dynamic>::Zero(3,n_sample);
             Epolar = Matrix<double,3,Dynamic>::Zero(3,n_sample);
             int column = 0;
@@ -107,16 +113,21 @@ namespace data_field{
                 while(getline(ss,element,delim)){
                     if(index < 3){
                         Rpolar(index,column) = std::stod(element);
-                    }else if(index == 4){
+                    }else if(index == 3){
                         Epolar(0,column) = std::stod(element);
+                    }else{
+                        ERR("error input file has more column than 4");
                     }
                     index++;
                 }
                 column++;
             }            
         }else{
-            ERR("ERRROR:Reading file format is UNKNOWN");
+            ERR("ERROR:Reading file format is UNKNOWN");
         }
+
+        std::cout << "nuber of lines = " << nline << std::endl;
+        std::cout << "#finish read file = " << filename <<std::endl;
 
         return 1;
     }
@@ -252,4 +263,20 @@ namespace data_field{
         return 0;
     }
 
+}
+
+long CountNumbersofTextLines(std::string filepath){
+    long nline = 0;
+    std::ifstream ifs(filepath);
+
+    if(ifs){
+        std::string line;
+        while(true){
+            getline(ifs,line);
+            nline++;
+            if(ifs.eof())
+            break;
+        }
+    }
+    return nline;
 }

@@ -29,8 +29,8 @@ int main(int argc, char** argv){
         ERR("error (./field_trans (int)L nearfield.txt farfield.txt)");
     }
 
+    bool flag_fourier = false;
     bool flag_fiafta = true;
-    bool flag_fourier = true;
     calcu_field::fiafta fiafta1;
     calcu_field::byft sample;
 
@@ -47,7 +47,9 @@ int main(int argc, char** argv){
         std::cout.precision(10);
         fiafta1.near_ref.read_file(file_near_ref);
         fiafta1.far_ref.read_file(file_far_ref);
+
         fiafta1.start_calcu(val_L);
+        
         fiafta1.set_matrix(fiafta1.A,fiafta1.near_ref.Rxyz);
         // fiafta1.calcu_ansbySVD();
         fiafta1.calcu_ansbyEigen();
@@ -56,10 +58,10 @@ int main(int argc, char** argv){
         // fiafta1.calcu_fardata_U(fiafta1.fardata,fiafta1.far_ref);
 
         fiafta1.print_info();
-        std::string title = file_near_ref + " to " + file_far_ref;
-        data_field::make_graph_xcut(fiafta1.fardata,fiafta1.far_ref,title);
-        data_field::make_graph_ycut(fiafta1.fardata,fiafta1.far_ref,title);
-        fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
+        // std::string title = file_near_ref + " to " + file_far_ref;
+        // data_field::make_graph_xcut(fiafta1.fardata,fiafta1.far_ref,title);
+        // data_field::make_graph_ycut(fiafta1.fardata,fiafta1.far_ref,title);
+        // fiafta1.calcu_error(fiafta1.fardata,fiafta1.far_ref,title);
 
         // std::cout << "finish all calculation" << std::endl;
         // fiafta1.savetxt_csv(fiafta1.A,"data_A",true);

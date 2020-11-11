@@ -51,4 +51,6 @@ namespace data_field{
     int make_graph_ycut(const data_field::field fardata,const data_field::field far_ref,std::string title);
 }
 
+long CountNumbersofTextLines(std::string filepath);
+
 #endif
